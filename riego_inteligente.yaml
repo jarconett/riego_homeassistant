@@ -1,0 +1,6739 @@
+ # Paquete de riego inteligente — dos zonas (2 válvulas / 2 circuitos)
+
+# Instalación: copia a config/packages/ y añade en configuration.yaml:
+
+# homeassistant:
+
+# packages: !include_dir_named packages
+
+#
+
+# Notificaciones push: notify.mobile_app_pixel_9
+
+#
+
+# Entidades Mi Flora (mismo patrón en los 4 sensores):
+
+# sensor.jardin_{1-4}_{cherry|motto|tex|escu}_{humedad|temperatura|conductividad|iluminancia|bateria}
+
+
+group:
+
+mi_flora_cherry:
+
+name: Mi Flora — Cherry (tomates)
+
+entities:
+
+- sensor.jardin_1_cherry_humedad
+
+- sensor.jardin_1_cherry_temperatura
+
+- sensor.jardin_1_cherry_conductividad
+
+- sensor.jardin_1_cherry_iluminancia
+
+- sensor.jardin_1_cherry_bateria
+
+mi_flora_motto:
+
+name: Mi Flora — Motto (pepinos)
+
+entities:
+
+- sensor.jardin_2_motto_humedad
+
+- sensor.jardin_2_motto_temperatura
+
+- sensor.jardin_2_motto_conductividad
+
+- sensor.jardin_2_motto_iluminancia
+
+- sensor.jardin_2_motto_bateria
+
+mi_flora_tex:
+
+name: Mi Flora — Tex (tomates pera)
+
+entities:
+
+- sensor.jardin_3_tex_humedad
+
+- sensor.jardin_3_tex_temperatura
+
+- sensor.jardin_3_tex_conductividad
+
+- sensor.jardin_3_tex_iluminancia
+
+- sensor.jardin_3_tex_bateria
+
+mi_flora_escu:
+
+name: Mi Flora — Escu (calabazas)
+
+entities:
+
+- sensor.jardin_4_escu_humedad
+
+- sensor.jardin_4_escu_temperatura
+
+- sensor.jardin_4_escu_conductividad
+
+- sensor.jardin_4_escu_iluminancia
+
+- sensor.jardin_4_escu_bateria
+
+mi_flora_todos:
+
+name: Mi Flora — Todos los sensores
+
+entities:
+
+- group.mi_flora_cherry
+
+- group.mi_flora_motto
+
+- group.mi_flora_tex
+
+- group.mi_flora_escu
+
+# Objetivos de humedad por cultivo (Mi Flora, % volumétrico aprox.)
+
+# Ajusta los input_number desde Ajustes → Dispositivos si necesitas retocarlos.
+
+input_number:
+
+riego_objetivo_cherry:
+
+name: Objetivo humedad Cherry
+
+min: 20
+
+max: 60
+
+step: 1
+
+unit_of_measurement: "%"
+
+icon: mdi:tomato
+
+initial: 35
+
+riego_objetivo_motto:
+
+name: Objetivo humedad Pepinos
+
+min: 20
+
+max: 60
+
+step: 1
+
+unit_of_measurement: "%"
+
+icon: mdi:food-cucumber
+
+initial: 42
+
+riego_objetivo_escu:
+
+name: Objetivo humedad Calabazas
+
+min: 20
+
+max: 60
+
+step: 1
+
+unit_of_measurement: "%"
+
+icon: mdi:pumpkin
+
+initial: 32
+
+riego_objetivo_tex:
+
+name: Objetivo humedad Tomates Pera
+
+min: 20
+
+max: 60
+
+step: 1
+
+unit_of_measurement: "%"
+
+icon: mdi:tomato
+
+initial: 35
+
+riego_umbral_desfase_moderado:
+
+name: Umbral desfase moderado
+
+min: 5
+
+max: 20
+
+step: 1
+
+unit_of_measurement: "%"
+
+icon: mdi:water-alert
+
+initial: 8
+
+riego_umbral_desfase_grave:
+
+name: Umbral desfase grave
+
+min: 10
+
+max: 30
+
+step: 1
+
+unit_of_measurement: "%"
+
+icon: mdi:water-off
+
+initial: 15
+
+riego_umbral_desbalance_circuito:
+
+name: Umbral desbalance mismo circuito
+
+min: 10
+
+max: 35
+
+step: 1
+
+unit_of_measurement: "%"
+
+icon: mdi:scale-balance
+
+initial: 18
+
+riego_umbral_temperatura_suelo:
+
+name: Umbral temperatura suelo (referencia)
+
+min: 20
+
+max: 40
+
+step: 1
+
+unit_of_measurement: "°C"
+
+icon: mdi:thermometer
+
+initial: 28
+
+riego_ciclos_para_hecho:
+
+name: Ciclos de humedad OK para cerrar zona
+
+min: 1
+
+max: 5
+
+step: 1
+
+icon: mdi:check-all
+
+initial: 2
+
+riego_zona1_confirmaciones_humedad:
+
+name: Confirmaciones humedad Zona 1
+
+min: 0
+
+max: 10
+
+step: 1
+
+icon: mdi:water-check
+
+initial: 0
+
+riego_zona2_confirmaciones_humedad:
+
+name: Confirmaciones humedad Zona 2
+
+min: 0
+
+max: 10
+
+step: 1
+
+icon: mdi:water-check
+
+initial: 0
+
+riego_pausa_entre_ciclos:
+
+name: Pausa entre ciclos (min)
+
+min: 2
+
+max: 60
+
+step: 1
+
+unit_of_measurement: min
+
+icon: mdi:timer-outline
+
+initial: 35
+
+riego_umbral_confirmacion:
+
+name: Umbral confirmación humedad OK
+
+min: 2
+
+max: 15
+
+step: 1
+
+unit_of_measurement: pts
+
+icon: mdi:water-check
+
+initial: 5
+
+riego_umbral_regar:
+
+name: Umbral riego completo (pulsos largos)
+
+min: 6
+
+max: 25
+
+step: 1
+
+unit_of_measurement: pts
+
+icon: mdi:water-plus
+
+initial: 15
+
+riego_umbral_pulso2:
+
+name: Umbral pulso 2 refuerzo
+
+min: 5
+
+max: 20
+
+step: 1
+
+unit_of_measurement: pts
+
+icon: mdi:water-sync
+
+initial: 10
+
+riego_max_ciclos_noche:
+
+name: Máximo ciclos nocturnos
+
+min: 4
+
+max: 12
+
+step: 1
+
+icon: mdi:counter
+
+initial: 8
+
+riego_zona2_regados_noche:
+
+name: Riegos Zona 2 esta noche
+
+min: 0
+
+max: 12
+
+step: 1
+
+icon: mdi:counter
+
+initial: 0
+
+riego_pulso1_minutos:
+
+name: Pulso 1 (min)
+
+min: 1
+
+max: 20
+
+step: 1
+
+unit_of_measurement: min
+
+icon: mdi:timer
+
+initial: 10
+
+riego_pausa_absorcion_min:
+
+name: Pausa absorción (min)
+
+min: 1
+
+max: 30
+
+step: 1
+
+unit_of_measurement: min
+
+icon: mdi:timer-sand
+
+initial: 15
+
+riego_pulso2_zona1_min:
+
+name: Pulso 2 Zona 1 (min)
+
+min: 1
+
+max: 15
+
+step: 1
+
+unit_of_measurement: min
+
+icon: mdi:timer
+
+initial: 8
+
+riego_pulso2_zona2_min:
+
+name: Pulso 2 Zona 2 (min)
+
+min: 1
+
+max: 15
+
+step: 1
+
+unit_of_measurement: min
+
+icon: mdi:timer
+
+initial: 5
+
+riego_pulso_suave_min:
+
+name: Pulso suave (min)
+
+min: 1
+
+max: 10
+
+step: 1
+
+unit_of_measurement: min
+
+icon: mdi:water-opacity
+
+initial: 5
+
+riego_pausa_suave_min:
+
+name: Pausa tras pulso suave (min)
+
+min: 1
+
+max: 15
+
+step: 1
+
+unit_of_measurement: min
+
+icon: mdi:timer-sand
+
+initial: 5
+
+riego_lectura_final_min:
+
+name: Lectura final (min)
+
+min: 1
+
+max: 20
+
+step: 1
+
+unit_of_measurement: min
+
+icon: mdi:timer-outline
+
+initial: 10
+
+riego_zona1_ciclos_sin_progreso:
+
+name: Ciclos Z1 sin progreso
+
+min: 0
+
+max: 12
+
+step: 1
+
+icon: mdi:alert-circle-outline
+
+initial: 0
+
+riego_zona2_ciclos_sin_progreso:
+
+name: Ciclos Z2 sin progreso
+
+min: 0
+
+max: 12
+
+step: 1
+
+icon: mdi:alert-circle-outline
+
+initial: 0
+
+riego_umbral_ec_encharque:
+
+name: EC mínima si encharcado (µS/cm)
+
+min: 200
+
+max: 800
+
+step: 50
+
+unit_of_measurement: µS/cm
+
+icon: mdi:flask-outline
+
+initial: 300
+
+riego_zona1_humedad_min_inicio:
+
+name: Humedad mín Z1 inicio ciclo
+
+min: 0
+
+max: 60
+
+step: 0.1
+
+unit_of_measurement: "%"
+
+icon: mdi:water-percent
+
+initial: 0
+
+riego_zona2_humedad_inicio:
+
+name: Humedad Z2 inicio ciclo
+
+min: 0
+
+max: 60
+
+step: 0.1
+
+unit_of_measurement: "%"
+
+icon: mdi:water-percent
+
+initial: 0
+
+riego_minutos_margen_amanecer:
+
+name: Margen mínimo antes amanecer (min)
+
+min: 15
+
+max: 90
+
+step: 5
+
+unit_of_measurement: min
+
+icon: mdi:weather-sunset-up
+
+initial: 30
+
+
+input_boolean:
+
+riego_activo:
+
+name: Riego automático activo
+
+icon: mdi:power
+
+initial: true
+
+riego_modo_simulacion:
+
+name: Modo simulación (sin válvulas, tiempos cortos)
+
+icon: mdi:pipe-valve
+
+riego_valvula_automatica:
+
+name: Válvula en control automático
+
+icon: mdi:robot
+
+riego_forzar_pese_clima:
+
+name: Forzar riego pese al clima
+
+icon: mdi:weather-cloudy-alert
+
+riego_zona1_hecho_hoy:
+
+name: Riego Zona 1 completado hoy
+
+icon: mdi:check-circle
+
+riego_zona2_hecho_hoy:
+
+name: Riego Zona 2 completado hoy
+
+icon: mdi:check-circle
+
+riego_noche_en_curso:
+
+name: Orquestador nocturno activo
+
+icon: mdi:weather-night
+
+riego_alerta_caudal_z1_enviada:
+
+name: Alerta caudal Z1 enviada hoy
+
+icon: mdi:bell-check
+
+riego_alerta_caudal_z2_enviada:
+
+name: Alerta caudal Z2 enviada hoy
+
+icon: mdi:bell-check
+
+riego_fallback_z1_notificado:
+
+name: Fallback calor Z1 notificado
+
+icon: mdi:bell-check
+
+riego_fallback_z2_notificado:
+
+name: Fallback calor Z2 notificado
+
+icon: mdi:bell-check
+
+riego_rosales_aviso_enviado:
+
+name: Aviso rosales enviado hoy
+
+icon: mdi:flower
+
+riego_bluetooth_aviso_enviado:
+
+name: Aviso Bluetooth enviado hoy
+
+icon: mdi:bluetooth-off
+
+riego_zona1_ciclo_en_curso:
+
+name: Ciclo Zona 1 en ejecución
+
+icon: mdi:progress-clock
+
+riego_zona2_ciclo_en_curso:
+
+name: Ciclo Zona 2 en ejecución
+
+icon: mdi:progress-clock
+
+
+input_select:
+
+riego_zona1_etapa:
+
+name: Etapa riego Zona 1
+
+icon: mdi:watering-can
+
+options:
+
+- En espera
+
+- Iniciando
+
+- En espera — sensor no disponible
+
+- En espera — suelo caliente
+
+- En espera — encharque / EC baja
+
+- Ola de calor — riego nocturno
+
+- No necesario — suelo húmedo
+
+- Confirmando humedad
+
+- Pulso suave — regando
+
+- Pulso 1 — regando
+
+- Pausa absorción
+
+- Pulso 2 — refuerzo
+
+- Lectura final
+
+- Completado
+
+initial: En espera
+
+riego_zona2_etapa:
+
+name: Etapa riego Zona 2
+
+icon: mdi:watering-can
+
+options:
+
+- En espera
+
+- Iniciando
+
+- En espera — sensor no disponible
+
+- En espera — suelo caliente
+
+- En espera — encharque / EC baja
+
+- Ola de calor — riego nocturno
+
+- No necesario — suelo húmedo
+
+- Confirmando humedad
+
+- Pulso suave — regando
+
+- Pulso 1 — regando
+
+- Pausa absorción
+
+- Pulso 2 — refuerzo
+
+- Lectura final
+
+- Completado
+
+initial: En espera
+
+riego_turno_ciclo:
+
+name: Turno ciclo nocturno
+
+icon: mdi:swap-horizontal
+
+options:
+
+- zona_1
+
+- zona_2
+
+initial: zona_1
+
+
+input_datetime:
+
+riego_zona1_ultimo:
+
+name: Último riego Zona 1
+
+has_date: true
+
+has_time: true
+
+icon: mdi:calendar-clock
+
+riego_zona2_ultimo:
+
+name: Último riego Zona 2
+
+has_date: true
+
+has_time: true
+
+icon: mdi:calendar-clock
+
+riego_ultima_alerta_hora:
+
+name: Hora última alerta
+
+has_date: true
+
+has_time: true
+
+icon: mdi:bell-alert
+
+
+input_text:
+
+riego_ultima_alerta:
+
+name: Última alerta riego
+
+max: 255
+
+icon: mdi:bell-ring
+
+initial: Sin alertas recientes
+
+riego_historial_alertas:
+
+name: Historial alertas riego
+
+max: 255
+
+icon: mdi:history
+
+initial: ""
+
+riego_historial_alertas_b:
+
+name: Historial alertas riego (2)
+
+max: 255
+
+icon: mdi:history
+
+initial: ""
+
+riego_notify_servicio:
+
+name: Servicio notify (Pixel 9)
+
+max: 100
+
+icon: mdi:cellphone
+
+initial: notify.mobile_app_pixel_9
+
+riego_zona1_cultivo_seco_inicio:
+
+name: Cultivo más seco Z1 (inicio riego)
+
+max: 20
+
+icon: mdi:sprout
+
+initial: cherry
+
+riego_historial_decisiones:
+
+name: Historial decisiones riego
+
+max: 255
+
+icon: mdi:clipboard-text-clock
+
+initial: ""
+
+riego_historial_decisiones_b:
+
+name: Historial decisiones riego (2)
+
+max: 255
+
+icon: mdi:clipboard-text-clock
+
+initial: ""
+
+
+template:
+
+- sensor:
+
+- name: "Riego Zona 1 desbalance"
+
+unique_id: riego_zona1_desbalance
+
+default_entity_id: sensor.riego_zona_1_desbalance
+
+unit_of_measurement: "%"
+
+icon: mdi:scale-balance
+
+state: >
+
+{% set ns = namespace(vals=[]) %}
+
+{% set lista = [
+
+'sensor.jardin_1_cherry_humedad',
+
+'sensor.jardin_2_motto_humedad',
+
+'sensor.jardin_4_escu_humedad'
+
+] %}
+
+{% for s in lista %}
+
+{% if not (is_state(s, 'unavailable') or is_state(s, 'unknown')) %}
+
+{% set ns.vals = ns.vals + [states(s) | float(0)] %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ (ns.vals | max - ns.vals | min) | round(1) if ns.vals | length >= 2 else 0 }}
+
+attributes:
+
+mas_seco: >
+
+{% set ns = namespace(ok={}) %}
+
+{% set pares = [
+
+('Cherry', 'sensor.jardin_1_cherry_humedad'),
+
+('Pepinos', 'sensor.jardin_2_motto_humedad'),
+
+('Calabazas', 'sensor.jardin_4_escu_humedad')
+
+] %}
+
+{% for nombre, s in pares %}
+
+{% if not (is_state(s, 'unavailable') or is_state(s, 'unknown')) %}
+
+{% set ns.ok = ns.ok | combine({nombre: states(s) | float(0)}) %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ ns.ok | dictsort(false, 'value') | first | first if ns.ok | length > 0 else '—' }}
+
+mas_humedo: >
+
+{% set ns = namespace(ok={}) %}
+
+{% set pares = [
+
+('Cherry', 'sensor.jardin_1_cherry_humedad'),
+
+('Pepinos', 'sensor.jardin_2_motto_humedad'),
+
+('Calabazas', 'sensor.jardin_4_escu_humedad')
+
+] %}
+
+{% for nombre, s in pares %}
+
+{% if not (is_state(s, 'unavailable') or is_state(s, 'unknown')) %}
+
+{% set ns.ok = ns.ok | combine({nombre: states(s) | float(0)}) %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ ns.ok | dictsort(true, 'value') | first | first if ns.ok | length > 0 else '—' }}
+
+
+- name: "Riego Zona 1 sensores OK"
+
+unique_id: riego_zona1_sensores_ok
+
+default_entity_id: sensor.riego_zona_1_sensores_ok
+
+icon: mdi:bluetooth
+
+state: >
+
+{% set lista = [
+
+'sensor.jardin_1_cherry_humedad',
+
+'sensor.jardin_2_motto_humedad',
+
+'sensor.jardin_4_escu_humedad',
+
+'sensor.jardin_1_cherry_temperatura',
+
+'sensor.jardin_2_motto_temperatura',
+
+'sensor.jardin_4_escu_temperatura'
+
+] %}
+
+{% set ns = namespace(ok=true) %}
+
+{% for s in lista %}
+
+{% if is_state(s, 'unavailable') or is_state(s, 'unknown') %}
+
+{% set ns.ok = false %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ 'ok' if ns.ok else 'fallo' }}
+
+attributes:
+
+fallidos: >
+
+{% set lista = [
+
+('Cherry humedad', 'sensor.jardin_1_cherry_humedad'),
+
+('Pepinos humedad', 'sensor.jardin_2_motto_humedad'),
+
+('Calabazas humedad', 'sensor.jardin_4_escu_humedad'),
+
+('Cherry temp', 'sensor.jardin_1_cherry_temperatura'),
+
+('Pepinos temp', 'sensor.jardin_2_motto_temperatura'),
+
+('Calabazas temp', 'sensor.jardin_4_escu_temperatura')
+
+] %}
+
+{% set ns = namespace(out=[]) %}
+
+{% for nombre, s in lista %}
+
+{% if is_state(s, 'unavailable') or is_state(s, 'unknown') %}
+
+{% set ns.out = ns.out + [nombre] %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ ns.out | join(', ') }}
+
+
+- name: "Riego Zona 2 sensores OK"
+
+unique_id: riego_zona2_sensores_ok
+
+default_entity_id: sensor.riego_zona_2_sensores_ok
+
+icon: mdi:bluetooth
+
+state: >
+
+{% set lista = [
+
+'sensor.jardin_3_tex_humedad',
+
+'sensor.jardin_3_tex_temperatura'
+
+] %}
+
+{% set ns = namespace(ok=true) %}
+
+{% for s in lista %}
+
+{% if is_state(s, 'unavailable') or is_state(s, 'unknown') %}
+
+{% set ns.ok = false %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ 'ok' if ns.ok else 'fallo' }}
+
+attributes:
+
+fallidos: >
+
+{% set lista = [
+
+('Tex humedad', 'sensor.jardin_3_tex_humedad'),
+
+('Tex temp', 'sensor.jardin_3_tex_temperatura')
+
+] %}
+
+{% set ns = namespace(out=[]) %}
+
+{% for nombre, s in lista %}
+
+{% if is_state(s, 'unavailable') or is_state(s, 'unknown') %}
+
+{% set ns.out = ns.out + [nombre] %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ ns.out | join(', ') }}
+
+
+- name: "Riego Cherry desfase"
+
+unique_id: riego_cherry_desfase
+
+default_entity_id: sensor.riego_cherry_desfase
+
+unit_of_measurement: "pts"
+
+icon: mdi:tomato
+
+state: >
+
+{% set s = 'sensor.jardin_1_cherry_humedad' %}
+
+{% if is_state(s, 'unavailable') or is_state(s, 'unknown') %}unknown
+
+{% else %}
+
+{{ (states('input_number.riego_objetivo_cherry') | float(35)
+
+- states(s) | float(0)) | round(1) }}
+
+{% endif %}
+
+attributes:
+
+humedad: "{{ states('sensor.jardin_1_cherry_humedad') }}"
+
+objetivo: "{{ states('input_number.riego_objetivo_cherry') }}"
+
+nivel: >
+
+{% set s = 'sensor.jardin_1_cherry_humedad' %}
+
+{% if is_state(s, 'unavailable') or is_state(s, 'unknown') %}desconocido
+
+{% else %}
+
+{% set d = states('input_number.riego_objetivo_cherry') | float(35)
+
+- states(s) | float(0) %}
+
+{% if d >= states('input_number.riego_umbral_desfase_grave') | float(15) %}grave
+
+{% elif d >= states('input_number.riego_umbral_desfase_moderado') | float(8) %}moderado
+
+{% elif d > 0 %}leve
+
+{% else %}ok{% endif %}
+
+{% endif %}
+
+
+- name: "Riego Motto desfase"
+
+unique_id: riego_motto_desfase
+
+default_entity_id: sensor.riego_motto_desfase
+
+unit_of_measurement: "pts"
+
+icon: mdi:food-cucumber
+
+state: >
+
+{% set s = 'sensor.jardin_2_motto_humedad' %}
+
+{% if is_state(s, 'unavailable') or is_state(s, 'unknown') %}unknown
+
+{% else %}
+
+{{ (states('input_number.riego_objetivo_motto') | float(42)
+
+- states(s) | float(0)) | round(1) }}
+
+{% endif %}
+
+attributes:
+
+humedad: "{{ states('sensor.jardin_2_motto_humedad') }}"
+
+objetivo: "{{ states('input_number.riego_objetivo_motto') }}"
+
+nivel: >
+
+{% set s = 'sensor.jardin_2_motto_humedad' %}
+
+{% if is_state(s, 'unavailable') or is_state(s, 'unknown') %}desconocido
+
+{% else %}
+
+{% set d = states('input_number.riego_objetivo_motto') | float(42)
+
+- states(s) | float(0) %}
+
+{% if d >= states('input_number.riego_umbral_desfase_grave') | float(15) %}grave
+
+{% elif d >= states('input_number.riego_umbral_desfase_moderado') | float(8) %}moderado
+
+{% elif d > 0 %}leve
+
+{% else %}ok{% endif %}
+
+{% endif %}
+
+
+- name: "Riego Escu desfase"
+
+unique_id: riego_escu_desfase
+
+default_entity_id: sensor.riego_escu_desfase
+
+unit_of_measurement: "pts"
+
+icon: mdi:pumpkin
+
+state: >
+
+{% set s = 'sensor.jardin_4_escu_humedad' %}
+
+{% if is_state(s, 'unavailable') or is_state(s, 'unknown') %}unknown
+
+{% else %}
+
+{{ (states('input_number.riego_objetivo_escu') | float(32)
+
+- states(s) | float(0)) | round(1) }}
+
+{% endif %}
+
+attributes:
+
+humedad: "{{ states('sensor.jardin_4_escu_humedad') }}"
+
+objetivo: "{{ states('input_number.riego_objetivo_escu') }}"
+
+nivel: >
+
+{% set s = 'sensor.jardin_4_escu_humedad' %}
+
+{% if is_state(s, 'unavailable') or is_state(s, 'unknown') %}desconocido
+
+{% else %}
+
+{% set d = states('input_number.riego_objetivo_escu') | float(32)
+
+- states(s) | float(0) %}
+
+{% if d >= states('input_number.riego_umbral_desfase_grave') | float(15) %}grave
+
+{% elif d >= states('input_number.riego_umbral_desfase_moderado') | float(8) %}moderado
+
+{% elif d > 0 %}leve
+
+{% else %}ok{% endif %}
+
+{% endif %}
+
+
+- name: "Riego Tex desfase"
+
+unique_id: riego_tex_desfase
+
+default_entity_id: sensor.riego_tex_desfase
+
+unit_of_measurement: "pts"
+
+icon: mdi:tomato
+
+state: >
+
+{% set s = 'sensor.jardin_3_tex_humedad' %}
+
+{% if is_state(s, 'unavailable') or is_state(s, 'unknown') %}unknown
+
+{% else %}
+
+{{ (states('input_number.riego_objetivo_tex') | float(35)
+
+- states(s) | float(0)) | round(1) }}
+
+{% endif %}
+
+attributes:
+
+humedad: "{{ states('sensor.jardin_3_tex_humedad') }}"
+
+objetivo: "{{ states('input_number.riego_objetivo_tex') }}"
+
+nivel: >
+
+{% set s = 'sensor.jardin_3_tex_humedad' %}
+
+{% if is_state(s, 'unavailable') or is_state(s, 'unknown') %}desconocido
+
+{% else %}
+
+{% set d = states('input_number.riego_objetivo_tex') | float(35)
+
+- states(s) | float(0) %}
+
+{% if d >= states('input_number.riego_umbral_desfase_grave') | float(15) %}grave
+
+{% elif d >= states('input_number.riego_umbral_desfase_moderado') | float(8) %}moderado
+
+{% elif d > 0 %}leve
+
+{% else %}ok{% endif %}
+
+{% endif %}
+
+
+- name: "Riego Zona 1 temp suelo max"
+
+unique_id: riego_zona1_temp_suelo_max
+
+default_entity_id: sensor.riego_zona_1_temp_suelo_max
+
+unit_of_measurement: "°C"
+
+device_class: temperature
+
+state_class: measurement
+
+icon: mdi:thermometer
+
+state: >
+
+{{
+
+[
+
+states('sensor.jardin_1_cherry_temperatura') | float(0),
+
+states('sensor.jardin_2_motto_temperatura') | float(0),
+
+states('sensor.jardin_4_escu_temperatura') | float(0)
+
+] | max | round(1)
+
+}}
+
+attributes:
+
+umbral: "{{ states('input_number.riego_umbral_temperatura_suelo') }}"
+
+ola_de_calor: >
+
+{{
+
+[
+
+states('sensor.jardin_1_cherry_temperatura') | float(0),
+
+states('sensor.jardin_2_motto_temperatura') | float(0),
+
+states('sensor.jardin_4_escu_temperatura') | float(0)
+
+] | max >= states('input_number.riego_umbral_temperatura_suelo') | float(28)
+
+}}
+
+
+- name: "Riego Zona 2 temp suelo"
+
+unique_id: riego_zona2_temp_suelo
+
+default_entity_id: sensor.riego_zona_2_temp_suelo
+
+unit_of_measurement: "°C"
+
+device_class: temperature
+
+state_class: measurement
+
+icon: mdi:thermometer
+
+state: "{{ states('sensor.jardin_3_tex_temperatura') | float(0) | round(1) }}"
+
+attributes:
+
+umbral: "{{ states('input_number.riego_umbral_temperatura_suelo') }}"
+
+ola_de_calor: >
+
+{{ states('sensor.jardin_3_tex_temperatura') | float(0)
+
+>= states('input_number.riego_umbral_temperatura_suelo') | float(28) }}
+
+
+- name: "Riego clima permitido"
+
+unique_id: riego_clima_permitido
+
+default_entity_id: sensor.riego_clima_permitido
+
+icon: mdi:weather-partly-cloudy
+
+state: >
+
+{% if is_state('input_boolean.riego_forzar_pese_clima', 'on') %}forzado
+
+{% elif is_state('weather.aemet', 'unavailable') or is_state('weather.aemet', 'unknown') %}
+
+{% if states('sensor.aemet_rain') in ['unavailable', 'unknown'] %}clima_desconocido
+
+{% elif states('sensor.aemet_rain') | float(0) >= 1 %}bloqueado_lluvia_prevista
+
+{% else %}ok_sin_tiempo{% endif %}
+
+{% elif is_state('weather.aemet', 'rainy') or is_state('weather.aemet', 'pouring') %}bloqueado_lluvia
+
+{% elif states('sensor.aemet_rain') not in ['unavailable', 'unknown']
+
+and states('sensor.aemet_rain') | float(0) >= 1 %}bloqueado_lluvia_prevista
+
+{% else %}ok{% endif %}
+
+attributes:
+
+tiempo: "{{ states('weather.aemet') }}"
+
+lluvia_prevista: "{{ states('sensor.aemet_rain') }}"
+
+nota: "Activa forzar_pese_clima si AEMET no responde y quieres regar igual"
+
+
+- name: "Riego configuración OK"
+
+unique_id: riego_config_ok
+
+default_entity_id: sensor.riego_configuracion_ok
+
+icon: mdi:cog-check
+
+state: >
+
+{% set regar = states('input_number.riego_umbral_regar') | float(15) %}
+
+{% set conf = states('input_number.riego_umbral_confirmacion') | float(5) %}
+
+{{ 'ok' if regar > conf else 'error' }}
+
+attributes:
+
+mensaje: >
+
+{% set regar = states('input_number.riego_umbral_regar') | float(15) %}
+
+{% set conf = states('input_number.riego_umbral_confirmacion') | float(5) %}
+
+{% if regar <= conf %}
+
+riego_umbral_regar ({{ regar | int }}) debe ser mayor que riego_umbral_confirmacion ({{ conf | int }}).
+
+{% else %}Umbrales coherentes: confirmar ≤{{ conf | int }} pts, riego completo ≥{{ regar | int }} pts.{% endif %}
+
+
+# Tiempos efectivos: con simulación ON se usan valores cortos de prueba (1 min → 1 s de espera).
+
+- name: "Riego efectivo pulso 1"
+
+unique_id: riego_efectivo_pulso1_min
+
+default_entity_id: sensor.riego_efectivo_pulso1_min
+
+unit_of_measurement: min
+
+icon: mdi:timer
+
+state: >
+
+{% if is_state('input_boolean.riego_modo_simulacion', 'on') %}1
+
+{% else %}{{ states('input_number.riego_pulso1_minutos') | int(10) }}{% endif %}
+
+- name: "Riego efectivo pausa absorción"
+
+unique_id: riego_efectivo_pausa_absorcion_min
+
+default_entity_id: sensor.riego_efectivo_pausa_absorcion_min
+
+unit_of_measurement: min
+
+icon: mdi:timer-sand
+
+state: >
+
+{% if is_state('input_boolean.riego_modo_simulacion', 'on') %}1
+
+{% else %}{{ states('input_number.riego_pausa_absorcion_min') | int(15) }}{% endif %}
+
+- name: "Riego efectivo pulso 2 Zona 1"
+
+unique_id: riego_efectivo_pulso2_zona1_min
+
+default_entity_id: sensor.riego_efectivo_pulso2_zona1_min
+
+unit_of_measurement: min
+
+icon: mdi:timer
+
+state: >
+
+{% if is_state('input_boolean.riego_modo_simulacion', 'on') %}1
+
+{% else %}{{ states('input_number.riego_pulso2_zona1_min') | int(8) }}{% endif %}
+
+- name: "Riego efectivo pulso 2 Zona 2"
+
+unique_id: riego_efectivo_pulso2_zona2_min
+
+default_entity_id: sensor.riego_efectivo_pulso2_zona2_min
+
+unit_of_measurement: min
+
+icon: mdi:timer
+
+state: >
+
+{% if is_state('input_boolean.riego_modo_simulacion', 'on') %}1
+
+{% else %}{{ states('input_number.riego_pulso2_zona2_min') | int(5) }}{% endif %}
+
+- name: "Riego efectivo pulso suave"
+
+unique_id: riego_efectivo_pulso_suave_min
+
+default_entity_id: sensor.riego_efectivo_pulso_suave_min
+
+unit_of_measurement: min
+
+icon: mdi:water-opacity
+
+state: >
+
+{% if is_state('input_boolean.riego_modo_simulacion', 'on') %}1
+
+{% else %}{{ states('input_number.riego_pulso_suave_min') | int(5) }}{% endif %}
+
+- name: "Riego efectivo pausa suave"
+
+unique_id: riego_efectivo_pausa_suave_min
+
+default_entity_id: sensor.riego_efectivo_pausa_suave_min
+
+unit_of_measurement: min
+
+icon: mdi:timer-sand
+
+state: >
+
+{% if is_state('input_boolean.riego_modo_simulacion', 'on') %}1
+
+{% else %}{{ states('input_number.riego_pausa_suave_min') | int(5) }}{% endif %}
+
+- name: "Riego efectivo lectura final"
+
+unique_id: riego_efectivo_lectura_final_min
+
+default_entity_id: sensor.riego_efectivo_lectura_final_min
+
+unit_of_measurement: min
+
+icon: mdi:timer-outline
+
+state: >
+
+{% if is_state('input_boolean.riego_modo_simulacion', 'on') %}1
+
+{% else %}{{ states('input_number.riego_lectura_final_min') | int(10) }}{% endif %}
+
+- name: "Riego efectivo pausa entre ciclos"
+
+unique_id: riego_efectivo_pausa_entre_ciclos
+
+default_entity_id: sensor.riego_efectivo_pausa_entre_ciclos
+
+unit_of_measurement: min
+
+icon: mdi:timer-sync
+
+state: >
+
+{% if is_state('input_boolean.riego_modo_simulacion', 'on') %}2
+
+{% else %}{{ states('input_number.riego_pausa_entre_ciclos') | int(35) }}{% endif %}
+
+
+- name: "Riego Zona 1 estado"
+
+unique_id: riego_zona1_estado
+
+default_entity_id: sensor.riego_zona_1_estado
+
+icon: mdi:sprout
+
+state: >
+
+{% set e = states('input_select.riego_zona1_etapa') %}
+
+{% if is_state('input_boolean.riego_zona1_hecho_hoy', 'on') %}hecho
+
+{% elif e in ['Pulso 1 — regando', 'Pulso 2 — refuerzo', 'Pulso suave — regando'] %}regando
+
+{% elif e == 'En espera — encharque / EC baja' %}encharque_ec
+
+{% elif e == 'Confirmando humedad' %}confirmando
+
+{% elif e == 'En espera — suelo caliente' %}espera_calor
+
+{% elif e == 'En espera — sensor no disponible' %}sensor_fallo
+
+{% elif e == 'Ola de calor — riego nocturno' %}fallback_calor
+
+{% elif is_state('sensor.riego_zona_1_sensores_ok', 'ok')
+
+and states('sensor.riego_cherry_desfase') not in ['unknown', 'unavailable']
+
+and (states('sensor.riego_cherry_desfase') | float(0) > states('input_number.riego_umbral_confirmacion') | float(5)
+
+or states('sensor.riego_motto_desfase') | float(0) > states('input_number.riego_umbral_confirmacion') | float(5)
+
+or states('sensor.riego_escu_desfase') | float(0) > states('input_number.riego_umbral_confirmacion') | float(5)) %}seco
+
+{% else %}ok{% endif %}
+
+
+- name: "Riego Zona 2 estado"
+
+unique_id: riego_zona2_estado
+
+default_entity_id: sensor.riego_zona_2_estado
+
+icon: mdi:flower
+
+state: >
+
+{% set e = states('input_select.riego_zona2_etapa') %}
+
+{% if is_state('input_boolean.riego_zona2_hecho_hoy', 'on') %}hecho
+
+{% elif e in ['Pulso 1 — regando', 'Pulso 2 — refuerzo', 'Pulso suave — regando'] %}regando
+
+{% elif e == 'En espera — encharque / EC baja' %}encharque_ec
+
+{% elif e == 'Confirmando humedad' %}confirmando
+
+{% elif e == 'En espera — suelo caliente' %}espera_calor
+
+{% elif e == 'En espera — sensor no disponible' %}sensor_fallo
+
+{% elif e == 'Ola de calor — riego nocturno' %}fallback_calor
+
+{% elif is_state('sensor.riego_zona_2_sensores_ok', 'ok')
+
+and states('sensor.riego_tex_desfase') not in ['unknown', 'unavailable']
+
+and states('sensor.riego_tex_desfase') | float(0) > states('input_number.riego_umbral_confirmacion') | float(5) %}seco
+
+{% else %}ok{% endif %}
+
+
+- name: "Riego minutos hasta amanecer"
+
+unique_id: riego_minutos_hasta_amanecer
+
+default_entity_id: sensor.riego_minutos_hasta_amanecer
+
+unit_of_measurement: min
+
+icon: mdi:weather-sunset-up
+
+state: >
+
+{% set rising = state_attr('sun.sun', 'next_rising') %}
+
+{% if rising in [none, 'unknown', 'unavailable'] %}unknown
+
+{% else %}
+
+{{ ((as_timestamp(rising) - as_timestamp(now())) / 60) | round(0) }}
+
+{% endif %}
+
+
+- name: "Riego Zona 1 bloqueo EC"
+
+unique_id: riego_zona1_bloqueo_ec
+
+default_entity_id: sensor.riego_zona_1_bloqueo_ec
+
+icon: mdi:flask-empty-off
+
+state: >
+
+{% set ec_umbral = states('input_number.riego_umbral_ec_encharque') | float(300) %}
+
+{% set umbral_enc = states('input_number.riego_umbral_confirmacion') | float(5) %}
+
+{% set ns = namespace(bloqueo=false) %}
+
+{% set pares = [
+
+('Cherry', 'sensor.jardin_1_cherry_humedad', 'sensor.jardin_1_cherry_conductividad', 'input_number.riego_objetivo_cherry'),
+
+('Pepinos', 'sensor.jardin_2_motto_humedad', 'sensor.jardin_2_motto_conductividad', 'input_number.riego_objetivo_motto'),
+
+('Calabazas', 'sensor.jardin_4_escu_humedad', 'sensor.jardin_4_escu_conductividad', 'input_number.riego_objetivo_escu')
+
+] %}
+
+{% for nombre, sh, sec, obj in pares %}
+
+{% if not (is_state(sh, 'unavailable') or is_state(sh, 'unknown')
+
+or is_state(sec, 'unavailable') or is_state(sec, 'unknown')) %}
+
+{% set h = states(sh) | float(0) %}
+
+{% set o = states(obj) | float(0) %}
+
+{% set ec = states(sec) | float(9999) %}
+
+{% if h > o + umbral_enc and ec < ec_umbral %}
+
+{% set ns.bloqueo = true %}
+
+{% endif %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ 'si' if ns.bloqueo else 'no' }}
+
+attributes:
+
+cultivos: >
+
+{% set ec_umbral = states('input_number.riego_umbral_ec_encharque') | float(300) %}
+
+{% set umbral_enc = states('input_number.riego_umbral_confirmacion') | float(5) %}
+
+{% set ns = namespace(out=[]) %}
+
+{% set pares = [
+
+('Cherry', 'sensor.jardin_1_cherry_humedad', 'sensor.jardin_1_cherry_conductividad', 'input_number.riego_objetivo_cherry'),
+
+('Pepinos', 'sensor.jardin_2_motto_humedad', 'sensor.jardin_2_motto_conductividad', 'input_number.riego_objetivo_motto'),
+
+('Calabazas', 'sensor.jardin_4_escu_humedad', 'sensor.jardin_4_escu_conductividad', 'input_number.riego_objetivo_escu')
+
+] %}
+
+{% for nombre, sh, sec, obj in pares %}
+
+{% if not (is_state(sh, 'unavailable') or is_state(sh, 'unknown')
+
+or is_state(sec, 'unavailable') or is_state(sec, 'unknown')) %}
+
+{% set h = states(sh) | float(0) %}
+
+{% set o = states(obj) | float(0) %}
+
+{% set ec = states(sec) | float(9999) %}
+
+{% if h > o + umbral_enc and ec < ec_umbral %}
+
+{% set ns.out = ns.out + [
+
+nombre ~ ': ' ~ h | round(0) ~ '% (obj ' ~ o | round(0) ~ '%), EC ' ~ ec | round(0) ~ ' µS/cm'
+
+] %}
+
+{% endif %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ ns.out | join(' | ') if ns.out | length > 0 else '—' }}
+
+
+- name: "Riego Zona 2 bloqueo EC"
+
+unique_id: riego_zona2_bloqueo_ec
+
+default_entity_id: sensor.riego_zona_2_bloqueo_ec
+
+icon: mdi:flask-empty-off
+
+state: >
+
+{% set ec_umbral = states('input_number.riego_umbral_ec_encharque') | float(300) %}
+
+{% set umbral_enc = states('input_number.riego_umbral_confirmacion') | float(5) %}
+
+{% set sh = 'sensor.jardin_3_tex_humedad' %}
+
+{% set sec = 'sensor.jardin_3_tex_conductividad' %}
+
+{% if is_state(sh, 'unavailable') or is_state(sh, 'unknown')
+
+or is_state(sec, 'unavailable') or is_state(sec, 'unknown') %}no
+
+{% elif states(sh) | float(0) > states('input_number.riego_objetivo_tex') | float(35) + umbral_enc
+
+and states(sec) | float(9999) < ec_umbral %}si
+
+{% else %}no{% endif %}
+
+attributes:
+
+cultivos: >
+
+{% set ec_umbral = states('input_number.riego_umbral_ec_encharque') | float(300) %}
+
+{% set umbral_enc = states('input_number.riego_umbral_confirmacion') | float(5) %}
+
+{% set sh = 'sensor.jardin_3_tex_humedad' %}
+
+{% set sec = 'sensor.jardin_3_tex_conductividad' %}
+
+{% if is_state(sh, 'unavailable') or is_state(sh, 'unknown')
+
+or is_state(sec, 'unavailable') or is_state(sec, 'unknown') %}—
+
+{% elif states(sh) | float(0) > states('input_number.riego_objetivo_tex') | float(35) + umbral_enc
+
+and states(sec) | float(9999) < ec_umbral %}
+
+Tomates Pera: {{ states(sh) | round(0) }}%
+
+(obj {{ states('input_number.riego_objetivo_tex') | round(0) }}%),
+
+EC {{ states(sec) | round(0) }} µS/cm
+
+{% else %}—{% endif %}
+
+
+- name: "Riego Zona 1 desfase max"
+
+unique_id: riego_zona1_desfase_max
+
+default_entity_id: sensor.riego_zona_1_desfase_max
+
+unit_of_measurement: pts
+
+icon: mdi:water-alert
+
+state: >
+
+{% set vals = [
+
+states('sensor.riego_cherry_desfase'),
+
+states('sensor.riego_motto_desfase'),
+
+states('sensor.riego_escu_desfase')
+
+] %}
+
+{% set ns = namespace(m=0) %}
+
+{% for v in vals %}
+
+{% if v not in ['unknown', 'unavailable'] and v | float(0) > ns.m %}
+
+{% set ns.m = v | float(0) %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ ns.m | round(1) }}
+
+
+- name: "Riego Zona 1 etapa detalle"
+
+unique_id: riego_zona1_etapa_detalle
+
+default_entity_id: sensor.riego_zona_1_etapa_detalle
+
+icon: mdi:information-outline
+
+state: >
+
+{% set e = states('input_select.riego_zona1_etapa') %}
+
+{% set sim = is_state('input_boolean.riego_modo_simulacion', 'on') %}
+
+{% if e == 'Pulso 1 — regando' %}
+
+Pulso 1 — {{ states('sensor.riego_efectivo_pulso1_min') | int }} min{% if sim %} ({{ states('sensor.riego_efectivo_pulso1_min') | int }} s){% endif %}
+
+{% elif e == 'Pausa absorción' %}
+
+Pausa — {{ states('sensor.riego_efectivo_pausa_absorcion_min') | int }} min{% if sim %} ({{ states('sensor.riego_efectivo_pausa_absorcion_min') | int }} s){% endif %}
+
+{% elif e == 'Pulso 2 — refuerzo' %}
+
+Pulso 2 — {{ states('sensor.riego_efectivo_pulso2_zona1_min') | int }} min{% if sim %} ({{ states('sensor.riego_efectivo_pulso2_zona1_min') | int }} s){% endif %}
+
+{% elif e == 'Pulso suave — regando' %}
+
+Pulso suave — {{ states('sensor.riego_efectivo_pulso_suave_min') | int }} min{% if sim %} ({{ states('sensor.riego_efectivo_pulso_suave_min') | int }} s){% endif %}
+
+{% elif e == 'Lectura final' %}
+
+Lectura — {{ states('sensor.riego_efectivo_lectura_final_min') | int }} min{% if sim %} ({{ states('sensor.riego_efectivo_lectura_final_min') | int }} s){% endif %}
+
+{% else %}{{ e }}{% endif %}
+
+
+- name: "Riego Zona 2 etapa detalle"
+
+unique_id: riego_zona2_etapa_detalle
+
+default_entity_id: sensor.riego_zona_2_etapa_detalle
+
+icon: mdi:information-outline
+
+state: >
+
+{% set e = states('input_select.riego_zona2_etapa') %}
+
+{% set sim = is_state('input_boolean.riego_modo_simulacion', 'on') %}
+
+{% if e == 'Pulso 1 — regando' %}
+
+Pulso 1 — {{ states('sensor.riego_efectivo_pulso1_min') | int }} min{% if sim %} ({{ states('sensor.riego_efectivo_pulso1_min') | int }} s){% endif %}
+
+{% elif e == 'Pausa absorción' %}
+
+Pausa — {{ states('sensor.riego_efectivo_pausa_absorcion_min') | int }} min{% if sim %} ({{ states('sensor.riego_efectivo_pausa_absorcion_min') | int }} s){% endif %}
+
+{% elif e == 'Pulso 2 — refuerzo' %}
+
+Pulso 2 — {{ states('sensor.riego_efectivo_pulso2_zona2_min') | int }} min{% if sim %} ({{ states('sensor.riego_efectivo_pulso2_zona2_min') | int }} s){% endif %}
+
+{% elif e == 'Pulso suave — regando' %}
+
+Pulso suave — {{ states('sensor.riego_efectivo_pulso_suave_min') | int }} min{% if sim %} ({{ states('sensor.riego_efectivo_pulso_suave_min') | int }} s){% endif %}
+
+{% elif e == 'Lectura final' %}
+
+Lectura — {{ states('sensor.riego_efectivo_lectura_final_min') | int }} min{% if sim %} ({{ states('sensor.riego_efectivo_lectura_final_min') | int }} s){% endif %}
+
+{% else %}{{ e }}{% endif %}
+
+
+- name: "Riego Zona 1 decision prevista"
+
+unique_id: riego_zona1_decision_prevista
+
+default_entity_id: sensor.riego_zona_1_decision_prevista
+
+icon: mdi:head-cog
+
+state: >
+
+{% if is_state('input_boolean.riego_zona1_hecho_hoy', 'on') %}Hecho hoy
+
+{% elif is_state('input_boolean.riego_zona1_ciclo_en_curso', 'on') %}Ejecutando ciclo
+
+{% else %}
+
+{% set umbral_regar = states('input_number.riego_umbral_regar') | float(15) %}
+
+{% set umbral_conf = states('input_number.riego_umbral_confirmacion') | float(5) %}
+
+{% set umbral_desbal = states('input_number.riego_umbral_desbalance_circuito') | float(18) %}
+
+{% set sensores_ok = is_state('sensor.riego_zona_1_sensores_ok', 'ok') %}
+
+{% set umbral_temp = states('input_number.riego_umbral_temperatura_suelo') | float(28) %}
+
+{% set p1 = states('sensor.riego_efectivo_pulso1_min') | int(10) %}
+
+{% set pausa_abs = states('sensor.riego_efectivo_pausa_absorcion_min') | int(15) %}
+
+{% set lectura = states('sensor.riego_efectivo_lectura_final_min') | int(10) %}
+
+{% set ps = states('sensor.riego_efectivo_pulso_suave_min') | int(5) %}
+
+{% set pausa_s = states('sensor.riego_efectivo_pausa_suave_min') | int(5) %}
+
+{% set margen = states('input_number.riego_minutos_margen_amanecer') | float(30) %}
+
+{% set min_am = states('sensor.riego_minutos_hasta_amanecer') %}
+
+{% set margen_ok_completo = min_am in ['unknown', 'unavailable']
+
+or min_am | float(999) > (p1 + pausa_abs + lectura + margen) %}
+
+{% set margen_ok_suave = min_am in ['unknown', 'unavailable']
+
+or min_am | float(999) > (ps + pausa_s + lectura + margen) %}
+
+{% set temp_max = [
+
+states('sensor.jardin_1_cherry_temperatura') | float(0),
+
+states('sensor.jardin_2_motto_temperatura') | float(0),
+
+states('sensor.jardin_4_escu_temperatura') | float(0)
+
+] | max %}
+
+{% set temp_ok = temp_max < umbral_temp %}
+
+{% set c = states('sensor.jardin_1_cherry_humedad') | float(0) %}
+
+{% set m = states('sensor.jardin_2_motto_humedad') | float(0) %}
+
+{% set e = states('sensor.jardin_4_escu_humedad') | float(0) %}
+
+{% set oc = states('input_number.riego_objetivo_cherry') | float(35) %}
+
+{% set om = states('input_number.riego_objetivo_motto') | float(42) %}
+
+{% set oe = states('input_number.riego_objetivo_escu') | float(32) %}
+
+{% set ok_todos = c >= oc - umbral_conf and m >= om - umbral_conf and e >= oe - umbral_conf %}
+
+{% set ok_may = (1 if c >= oc - umbral_conf else 0)
+
++ (1 if m >= om - umbral_conf else 0)
+
++ (1 if e >= oe - umbral_conf else 0) >= 2 %}
+
+{% set desbal_ok = states('sensor.riego_zona_1_desbalance') | float(99) < umbral_desbal %}
+
+{% set necesita = not ok_todos %}
+
+{% set completo = c < oc - umbral_regar or m < om - umbral_regar or e < oe - umbral_regar %}
+
+{% set regar_c = sensores_ok and completo and temp_ok %}
+
+{% set regar_s = sensores_ok and necesita and not completo and temp_ok %}
+
+{% set confirmar = ok_todos or (ok_may and desbal_ok) %}
+
+{% set bloqueo = is_state('sensor.riego_zona_1_bloqueo_ec', 'si') %}
+
+{% if not sensores_ok %}Sensor no disponible
+
+{% elif bloqueo and necesita %}Bloqueo encharque/EC
+
+{% elif necesita and not temp_ok %}Espera — suelo caliente
+
+{% elif regar_c and not bloqueo and not margen_ok_completo %}
+
+{% if regar_s and margen_ok_suave %}Pulso suave (poco margen)
+
+{% elif confirmar %}Confirmar humedad (poco margen)
+
+{% else %}Margen amanecer insuficiente{% endif %}
+
+{% elif regar_c and not bloqueo %}Riego completo
+
+{% elif regar_s and not bloqueo %}Pulso suave
+
+{% elif confirmar %}Confirmar humedad
+
+{% else %}OK — sin acción{% endif %}
+
+{% endif %}
+
+attributes:
+
+cultivo_foco: >
+
+{% set c = states('sensor.jardin_1_cherry_humedad') | float(0) %}
+
+{% set m = states('sensor.jardin_2_motto_humedad') | float(0) %}
+
+{% set e = states('sensor.jardin_4_escu_humedad') | float(0) %}
+
+{% set hmin = [c, m, e] | min %}
+
+{% if c == hmin %}Cherry{% elif m == hmin %}Pepinos{% else %}Calabazas{% endif %}
+
+humedades: >
+
+C{{ states('sensor.jardin_1_cherry_humedad') | float(0) | round(0) }}%
+
+M{{ states('sensor.jardin_2_motto_humedad') | float(0) | round(0) }}%
+
+E{{ states('sensor.jardin_4_escu_humedad') | float(0) | round(0) }}%
+
+margen_amanecer: "{{ states('sensor.riego_minutos_hasta_amanecer') }} min"
+
+minutos_riego_completo: >
+
+{{ (states('sensor.riego_efectivo_pulso1_min') | int(10)
+
++ states('sensor.riego_efectivo_pausa_absorcion_min') | int(15)
+
++ states('sensor.riego_efectivo_lectura_final_min') | int(10)
+
++ states('input_number.riego_minutos_margen_amanecer') | float(30)) | int }} min
+
+bloqueo_ec_cultivos: "{{ state_attr('sensor.riego_zona_1_bloqueo_ec', 'cultivos') }}"
+
+nota: "Sin fallback ola de calor; en ciclos 6–8 puede forzar riego con suelo caliente"
+
+
+- name: "Riego Zona 2 decision prevista"
+
+unique_id: riego_zona2_decision_prevista
+
+default_entity_id: sensor.riego_zona_2_decision_prevista
+
+icon: mdi:head-cog
+
+state: >
+
+{% if is_state('input_boolean.riego_zona2_hecho_hoy', 'on') %}Hecho hoy
+
+{% elif is_state('input_boolean.riego_zona2_ciclo_en_curso', 'on') %}Ejecutando ciclo
+
+{% else %}
+
+{% set umbral_regar = states('input_number.riego_umbral_regar') | float(15) %}
+
+{% set umbral_conf = states('input_number.riego_umbral_confirmacion') | float(5) %}
+
+{% set sensores_ok = is_state('sensor.riego_zona_2_sensores_ok', 'ok') %}
+
+{% set umbral_temp = states('input_number.riego_umbral_temperatura_suelo') | float(28) %}
+
+{% set p1 = states('sensor.riego_efectivo_pulso1_min') | int(10) %}
+
+{% set pausa_abs = states('sensor.riego_efectivo_pausa_absorcion_min') | int(15) %}
+
+{% set lectura = states('sensor.riego_efectivo_lectura_final_min') | int(10) %}
+
+{% set ps = states('sensor.riego_efectivo_pulso_suave_min') | int(5) %}
+
+{% set pausa_s = states('sensor.riego_efectivo_pausa_suave_min') | int(5) %}
+
+{% set margen = states('input_number.riego_minutos_margen_amanecer') | float(30) %}
+
+{% set min_am = states('sensor.riego_minutos_hasta_amanecer') %}
+
+{% set margen_ok_completo = min_am in ['unknown', 'unavailable']
+
+or min_am | float(999) > (p1 + pausa_abs + lectura + margen) %}
+
+{% set margen_ok_suave = min_am in ['unknown', 'unavailable']
+
+or min_am | float(999) > (ps + pausa_s + lectura + margen) %}
+
+{% set temp = states('sensor.jardin_3_tex_temperatura') | float(0) %}
+
+{% set temp_ok = temp < umbral_temp %}
+
+{% set tex = states('sensor.jardin_3_tex_humedad') | float(0) %}
+
+{% set obj = states('input_number.riego_objetivo_tex') | float(35) %}
+
+{% set ok = tex >= obj - umbral_conf %}
+
+{% set necesita = not ok %}
+
+{% set completo = tex < obj - umbral_regar %}
+
+{% set regar_c = sensores_ok and completo and temp_ok %}
+
+{% set regar_s = sensores_ok and necesita and not completo and temp_ok %}
+
+{% set bloqueo = is_state('sensor.riego_zona_2_bloqueo_ec', 'si') %}
+
+{% if not sensores_ok %}Sensor no disponible
+
+{% elif bloqueo and necesita %}Bloqueo encharque/EC
+
+{% elif necesita and not temp_ok %}Espera — suelo caliente
+
+{% elif regar_c and not bloqueo and not margen_ok_completo %}
+
+{% if regar_s and margen_ok_suave %}Pulso suave (poco margen)
+
+{% elif ok %}Confirmar humedad (poco margen)
+
+{% else %}Margen amanecer insuficiente{% endif %}
+
+{% elif regar_c and not bloqueo %}Riego completo
+
+{% elif regar_s and not bloqueo %}Pulso suave
+
+{% elif ok %}Confirmar humedad
+
+{% else %}OK — sin acción{% endif %}
+
+{% endif %}
+
+attributes:
+
+humedad_tex: "{{ states('sensor.jardin_3_tex_humedad') | float(0) | round(0) }}%"
+
+margen_amanecer: "{{ states('sensor.riego_minutos_hasta_amanecer') }} min"
+
+minutos_riego_completo: >
+
+{{ (states('sensor.riego_efectivo_pulso1_min') | int(10)
+
++ states('sensor.riego_efectivo_pausa_absorcion_min') | int(15)
+
++ states('sensor.riego_efectivo_lectura_final_min') | int(10)
+
++ states('input_number.riego_minutos_margen_amanecer') | float(30)) | int }} min
+
+bloqueo_ec_cultivos: "{{ state_attr('sensor.riego_zona_2_bloqueo_ec', 'cultivos') }}"
+
+nota: "Sin fallback ola de calor; en ciclos 6–8 puede forzar riego con suelo caliente"
+
+
+script:
+
+notificar_riego:
+
+alias: "Registrar alerta y notificar Pixel 9"
+
+mode: queued
+
+fields:
+
+titulo:
+
+description: Título de la notificación
+
+required: true
+
+mensaje:
+
+description: Cuerpo del mensaje
+
+required: true
+
+sequence:
+
+- variables:
+
+linea: "{{ now().strftime('%d/%m %H:%M') }} — {{ titulo }}"
+
+servicio: >-
+
+{% set s = states('input_text.riego_notify_servicio') %}
+
+{{ s if s not in ['', 'unknown', 'unavailable'] else 'notify.mobile_app_pixel_9' }}
+
+- action: "{{ servicio }}"
+
+data:
+
+title: "{{ titulo }}"
+
+message: "{{ mensaje }}"
+
+- action: input_text.set_value
+
+target:
+
+entity_id: input_text.riego_ultima_alerta
+
+data:
+
+value: "{{ titulo }} — {{ mensaje[:200] }}"
+
+- action: input_text.set_value
+
+target:
+
+entity_id: input_text.riego_historial_alertas
+
+data:
+
+value: "{{ (linea + '\\n' + states('input_text.riego_historial_alertas'))[:255] }}"
+
+- action: input_text.set_value
+
+target:
+
+entity_id: input_text.riego_historial_alertas_b
+
+data:
+
+value: >-
+
+{% set prev = states('input_text.riego_historial_alertas') %}
+
+{% set overflow = (linea + '\\n' + prev)[255:] %}
+
+{{ (overflow + '\\n' + states('input_text.riego_historial_alertas_b'))[:255] }}
+
+- action: input_datetime.set_datetime
+
+target:
+
+entity_id: input_datetime.riego_ultima_alerta_hora
+
+data:
+
+datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+- action: logbook.log
+
+data:
+
+name: Riego inteligente
+
+message: "{{ titulo }} — {{ mensaje[:180] }}"
+
+entity_id: input_boolean.riego_activo
+
+
+riego_reset_contadores_noche:
+
+alias: "Reset contadores nocturnos"
+
+mode: queued
+
+sequence:
+
+- action: input_number.set_value
+
+target:
+
+entity_id:
+
+- input_number.riego_zona1_confirmaciones_humedad
+
+- input_number.riego_zona2_confirmaciones_humedad
+
+- input_number.riego_zona2_regados_noche
+
+- input_number.riego_zona1_ciclos_sin_progreso
+
+- input_number.riego_zona2_ciclos_sin_progreso
+
+data:
+
+value: 0
+
+- action: input_boolean.turn_off
+
+target:
+
+entity_id:
+
+- input_boolean.riego_alerta_caudal_z1_enviada
+
+- input_boolean.riego_alerta_caudal_z2_enviada
+
+- input_boolean.riego_fallback_z1_notificado
+
+- input_boolean.riego_fallback_z2_notificado
+
+- input_boolean.riego_rosales_aviso_enviado
+
+- input_boolean.riego_bluetooth_aviso_enviado
+
+- input_boolean.riego_valvula_automatica
+
+- input_boolean.riego_zona1_ciclo_en_curso
+
+- input_boolean.riego_zona2_ciclo_en_curso
+
+
+riego_registrar_decision:
+
+alias: "Registrar decisión de ciclo en historial"
+
+mode: queued
+
+fields:
+
+zona:
+
+required: true
+
+selector:
+
+select:
+
+options:
+
+- "1"
+
+- "2"
+
+decision:
+
+required: true
+
+detalle:
+
+default: ""
+
+sequence:
+
+- variables:
+
+min_am: "{{ states('sensor.riego_minutos_hasta_amanecer') }}"
+
+linea: >-
+
+{{ now().strftime('%d/%m %H:%M') }} Z{{ zona }} {{ decision }}:
+
+{{ detalle }}
+
+{% if min_am not in ['unknown', 'unavailable'] %} (amanecer {{ min_am }} min){% endif %}
+
+- action: logbook.log
+
+data:
+
+name: Riego inteligente
+
+message: "{{ linea }}"
+
+entity_id: input_boolean.riego_activo
+
+- action: input_text.set_value
+
+target:
+
+entity_id: input_text.riego_historial_decisiones
+
+data:
+
+value: "{{ (linea + '\\n' + states('input_text.riego_historial_decisiones'))[:255] }}"
+
+- action: input_text.set_value
+
+target:
+
+entity_id: input_text.riego_historial_decisiones_b
+
+data:
+
+value: >-
+
+{% set prev = states('input_text.riego_historial_decisiones') %}
+
+{% set overflow = (linea + '\\n' + prev)[255:] %}
+
+{{ (overflow + '\\n' + states('input_text.riego_historial_decisiones_b'))[:255] }}
+
+
+riego_evaluar_sin_progreso:
+
+alias: "Evaluar mejora humedad tras regar"
+
+mode: queued
+
+fields:
+
+zona:
+
+required: true
+
+selector:
+
+select:
+
+options:
+
+- "1"
+
+- "2"
+
+sequence:
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ zona == '1' }}"
+
+sequence:
+
+- variables:
+
+cultivo: "{{ states('input_text.riego_zona1_cultivo_seco_inicio') }}"
+
+sensor_seco: >-
+
+{% set mapa = {
+
+'cherry': 'sensor.jardin_1_cherry_humedad',
+
+'motto': 'sensor.jardin_2_motto_humedad',
+
+'escu': 'sensor.jardin_4_escu_humedad'
+
+} %}
+
+{{ mapa.get(cultivo, 'sensor.jardin_1_cherry_humedad') }}
+
+mejora: >-
+
+{{ states(sensor_seco) | float(0)
+
+- states('input_number.riego_zona1_humedad_min_inicio') | float(0) }}
+
+nuevo: >-
+
+{% set c = states('input_number.riego_zona1_ciclos_sin_progreso') | int(0) %}
+
+{{ c + 1 if mejora | float < 3 else 0 }}
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona1_ciclos_sin_progreso
+
+data:
+
+value: "{{ nuevo }}"
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ mejora | float < 3 and nuevo | int >= 3 }}"
+
+sequence:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "⚠️ Zona 1 — Gotero posiblemente bloqueado"
+
+mensaje: >-
+
+{{ nuevo | int }} ciclos sin subir humedad ≥3 pts en {{ cultivo }}
+
+(última mejora: {{ mejora | round(1) }} pts).
+
+Más seco circuito: {{ state_attr('sensor.riego_zona_1_desbalance', 'mas_seco') }}.
+
+Revisa gotero u obstrucción; equilibra cultivos del circuito.
+
+default:
+
+- variables:
+
+mejora: >-
+
+{{ states('sensor.jardin_3_tex_humedad') | float(0)
+
+- states('input_number.riego_zona2_humedad_inicio') | float(0) }}
+
+nuevo: >-
+
+{% set c = states('input_number.riego_zona2_ciclos_sin_progreso') | int(0) %}
+
+{{ c + 1 if mejora | float < 3 else 0 }}
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona2_ciclos_sin_progreso
+
+data:
+
+value: "{{ nuevo }}"
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ mejora | float < 3 and nuevo | int >= 3 }}"
+
+sequence:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "⚠️ Zona 2 — Gotero posiblemente bloqueado"
+
+mensaje: >-
+
+{{ nuevo | int }} ciclos sin subir humedad ≥3 pts
+
+(última mejora: {{ mejora | round(1) }} pts).
+
+Revisa gotero de tomates pera y rosales del circuito.
+
+
+riego_etapa_zona1:
+
+alias: "Actualizar etapa visual Zona 1"
+
+mode: queued
+
+fields:
+
+etapa:
+
+required: true
+
+sequence:
+
+- action: input_select.select_option
+
+target:
+
+entity_id: input_select.riego_zona1_etapa
+
+data:
+
+option: "{{ etapa }}"
+
+
+riego_etapa_zona2:
+
+alias: "Actualizar etapa visual Zona 2"
+
+mode: queued
+
+fields:
+
+etapa:
+
+required: true
+
+sequence:
+
+- action: input_select.select_option
+
+target:
+
+entity_id: input_select.riego_zona2_etapa
+
+data:
+
+option: "{{ etapa }}"
+
+
+alerta_caudal_zona1:
+
+alias: "Alerta caudal Zona 1 (post-riego)"
+
+mode: single
+
+fields:
+
+cherry_inicio:
+
+description: Humedad Cherry antes del riego
+
+motto_inicio:
+
+description: Humedad Pepinos antes del riego
+
+escu_inicio:
+
+description: Humedad Calabazas antes del riego
+
+sequence:
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_alerta_caudal_z1_enviada
+
+state: "on"
+
+sequence: []
+
+default:
+
+- variables:
+
+moderado: "{{ states('input_number.riego_umbral_desfase_moderado') | float(8) }}"
+
+grave: "{{ states('input_number.riego_umbral_desfase_grave') | float(15) }}"
+
+cultivos:
+
+- id: cherry
+
+nombre: "Cherry (tomates)"
+
+sensor: sensor.jardin_1_cherry_humedad
+
+objetivo: "{{ states('input_number.riego_objetivo_cherry') | float(35) }}"
+
+inicio: "{{ cherry_inicio | float(0) }}"
+
+- id: motto
+
+nombre: "Motto (pepinos)"
+
+sensor: sensor.jardin_2_motto_humedad
+
+objetivo: "{{ states('input_number.riego_objetivo_motto') | float(42) }}"
+
+inicio: "{{ motto_inicio | float(0) }}"
+
+- id: escu
+
+nombre: "Escu (calabazas)"
+
+sensor: sensor.jardin_4_escu_humedad
+
+objetivo: "{{ states('input_number.riego_objetivo_escu') | float(32) }}"
+
+inicio: "{{ escu_inicio | float(0) }}"
+
+- variables:
+
+lineas: >-
+
+{% set ns = namespace(out=[]) %}
+
+{% for c in cultivos %}
+
+{% if is_state(c.sensor, 'unavailable') or is_state(c.sensor, 'unknown') %}
+
+{% else %}
+
+{% set actual = states(c.sensor) | float(0) %}
+
+{% set desfase = (c.objetivo | float) - actual %}
+
+{% set subida = actual - (c.inicio | float) %}
+
+{% if desfase >= grave | float %}
+
+{% set accion = 'ABRIR ~1/2 vuelta (o revisar obstrucción)' %}
+
+{% elif desfase >= moderado | float %}
+
+{% set accion = 'ABRIR ~1/4 de vuelta' %}
+
+{% elif desfase > 0 %}
+
+{% set accion = 'ligero ajuste: abrir un poco' %}
+
+{% elif desfase <= -12 %}
+
+{% set accion = 'CERRAR ~1/4 vuelta (riesgo encharque)' %}
+
+{% else %}
+
+{% set accion = 'OK' %}
+
+{% endif %}
+
+{% if subida < 4 and desfase >= moderado | float %}
+
+{% set accion = accion ~ ' — casi no subió tras riego (' ~ subida | round(1) ~ ' pts)' %}
+
+{% endif %}
+
+{% if desfase >= moderado | float or desfase <= -12 %}
+
+{% set ns.out = ns.out + [
+
+c.nombre ~ ': ' ~ actual | round(0) ~ '% (obj ' ~ c.objetivo | float | round(0) ~ '%, desfase ' ~ desfase | round(1) ~ ' pts) → ' ~ accion
+
+] %}
+
+{% endif %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ ns.out }}
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ lineas | length > 0 }}"
+
+sequence:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "💧 Zona 1 — Regular goteros (1 válvula, 3 cultivos)"
+
+mensaje: >-
+
+Circuito huerto tras el riego de hoy:
+
+{{ lineas | join(' | ') }}.
+
+Comparten válvula: ajusta solo el gotero del cultivo señalado.
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_alerta_caudal_z1_enviada
+
+
+alerta_caudal_zona2:
+
+alias: "Alerta caudal Zona 2 (post-riego)"
+
+mode: single
+
+fields:
+
+tex_inicio:
+
+description: Humedad Tex antes del riego
+
+sequence:
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_alerta_caudal_z2_enviada
+
+state: "on"
+
+sequence: []
+
+default:
+
+- variables:
+
+moderado: "{{ states('input_number.riego_umbral_desfase_moderado') | float(8) }}"
+
+grave: "{{ states('input_number.riego_umbral_desfase_grave') | float(15) }}"
+
+objetivo: "{{ states('input_number.riego_objetivo_tex') | float(35) }}"
+
+sensor_tex: sensor.jardin_3_tex_humedad
+
+actual: >-
+
+{% if is_state('sensor.jardin_3_tex_humedad', 'unavailable')
+
+or is_state('sensor.jardin_3_tex_humedad', 'unknown') %}unknown
+
+{% else %}{{ states('sensor.jardin_3_tex_humedad') | float(0) }}{% endif %}
+
+inicio: "{{ tex_inicio | float(0) }}"
+
+desfase: >-
+
+{% if actual == 'unknown' %}0
+
+{% else %}{{ objetivo | float - actual | float }}{% endif %}
+
+subida: >-
+
+{% if actual == 'unknown' %}0
+
+{% else %}{{ actual | float - inicio | float }}{% endif %}
+
+- variables:
+
+accion: >-
+
+{% if actual == 'unknown' %}
+
+Sensor Tex no disponible — revisar goteros a ojo.
+
+{% elif desfase | float >= grave | float %}
+
+ABRIR gotero tomates ~1/2 vuelta (cajón drena rápido). Revisa también rosales a ojo.
+
+{% elif desfase | float >= moderado | float %}
+
+ABRIR gotero tomates ~1/4 vuelta. Si rosales están secos, abre su gotero.
+
+{% elif desfase | float <= -12 %}
+
+CERRAR gotero tomates ~1/4 vuelta. Si rosales encharcados, cierra los suyos.
+
+{% else %}
+
+OK
+
+{% endif %}
+
+aviso_subida: >-
+
+{% if actual != 'unknown' and subida | float < 4 and desfase | float >= moderado | float %}
+
+Casi no subió tras riego ({{ subida | round(1) }} pts): gotero muy cerrado u obstruido.
+
+{% else %}
+
+{% endif %}
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ actual == 'unknown'
+
+or desfase | float >= moderado | float
+
+or desfase | float <= -12
+
+or (subida | float < 4 and desfase | float >= moderado | float) }}
+
+sequence:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "💧 Zona 2 — Regular goteros (tomates + rosales)"
+
+mensaje: >-
+
+Tex: {{ actual if actual == 'unknown' else actual | round(0) ~ '%' }}
+
+(objetivo {{ objetivo | round(0) }}%,
+
+desfase {{ desfase | round(1) }} pts, subió {{ subida | round(1) }} pts).
+
+{{ accion }}{{ aviso_subida }}
+
+Un solo circuito: equilibra tomates y rosales a mano.
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_alerta_caudal_z2_enviada
+
+
+riego_pulsos_zona1:
+
+alias: "Pulsos de riego Zona 1"
+
+mode: single
+
+sequence:
+
+- variables:
+
+sim: "{{ is_state('input_boolean.riego_modo_simulacion', 'on') }}"
+
+p1: "{{ states('sensor.riego_efectivo_pulso1_min') | int(10) }}"
+
+pausa: "{{ states('sensor.riego_efectivo_pausa_absorcion_min') | int(15) }}"
+
+p2: "{{ states('sensor.riego_efectivo_pulso2_zona1_min') | int(8) }}"
+
+lectura: "{{ states('sensor.riego_efectivo_lectura_final_min') | int(10) }}"
+
+umbral_p2: "{{ states('input_number.riego_umbral_pulso2') | float(10) }}"
+
+d_p1: "{{ p1 if sim else p1 * 60 }}"
+
+d_pausa: "{{ pausa if sim else pausa * 60 }}"
+
+d_p2: "{{ p2 if sim else p2 * 60 }}"
+
+d_lectura: "{{ lectura if sim else lectura * 60 }}"
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "Pulso 1 — regando"
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_valvula_automatica
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_modo_simulacion
+
+state: "off"
+
+sequence:
+
+- action: switch.turn_on
+
+target:
+
+entity_id: switch.valvula_riego_huerto
+
+- action: logbook.log
+
+data:
+
+name: Riego inteligente
+
+message: >-
+
+Z1 Pulso 1 — espera {{ d_p1 | int }} s{% if sim %} (simulación){% endif %}
+
+entity_id: input_select.riego_zona1_etapa
+
+- delay:
+
+seconds: "{{ d_p1 | int }}"
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_modo_simulacion
+
+state: "off"
+
+sequence:
+
+- action: switch.turn_off
+
+target:
+
+entity_id: switch.valvula_riego_huerto
+
+- action: input_boolean.turn_off
+
+target:
+
+entity_id: input_boolean.riego_valvula_automatica
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "Pausa absorción"
+
+- delay:
+
+seconds: "{{ d_pausa | int }}"
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: sensor.riego_zona_1_sensores_ok
+
+state: ok
+
+- condition: template
+
+value_template: >-
+
+{{ states('sensor.riego_minutos_hasta_amanecer') | float(999)
+
+> (p2 + lectura + states('input_number.riego_minutos_margen_amanecer') | float(30)) }}
+
+- condition: or
+
+conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ states('sensor.jardin_1_cherry_humedad') | float(0)
+
+< (states('input_number.riego_objetivo_cherry') | float(35) - umbral_p2) }}
+
+- condition: template
+
+value_template: >-
+
+{{ states('sensor.jardin_2_motto_humedad') | float(0)
+
+< (states('input_number.riego_objetivo_motto') | float(42) - umbral_p2) }}
+
+- condition: template
+
+value_template: >-
+
+{{ states('sensor.jardin_4_escu_humedad') | float(0)
+
+< (states('input_number.riego_objetivo_escu') | float(32) - umbral_p2) }}
+
+sequence:
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "Pulso 2 — refuerzo"
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_valvula_automatica
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_modo_simulacion
+
+state: "off"
+
+sequence:
+
+- action: switch.turn_on
+
+target:
+
+entity_id: switch.valvula_riego_huerto
+
+- delay:
+
+seconds: "{{ d_p2 | int }}"
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_modo_simulacion
+
+state: "off"
+
+sequence:
+
+- action: switch.turn_off
+
+target:
+
+entity_id: switch.valvula_riego_huerto
+
+- action: input_boolean.turn_off
+
+target:
+
+entity_id: input_boolean.riego_valvula_automatica
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "Lectura final"
+
+- delay:
+
+seconds: "{{ d_lectura | int }}"
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: Completado
+
+
+riego_pulso_suave_zona1:
+
+alias: "Pulso suave Zona 1 (humedad intermedia)"
+
+mode: single
+
+sequence:
+
+- variables:
+
+sim: "{{ is_state('input_boolean.riego_modo_simulacion', 'on') }}"
+
+ps: "{{ states('sensor.riego_efectivo_pulso_suave_min') | int(5) }}"
+
+pausa: "{{ states('sensor.riego_efectivo_pausa_suave_min') | int(5) }}"
+
+lectura: "{{ states('sensor.riego_efectivo_lectura_final_min') | int(10) }}"
+
+d_ps: "{{ ps if sim else ps * 60 }}"
+
+d_pausa: "{{ pausa if sim else pausa * 60 }}"
+
+d_lectura: "{{ lectura if sim else lectura * 60 }}"
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "Pulso suave — regando"
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_valvula_automatica
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_modo_simulacion
+
+state: "off"
+
+sequence:
+
+- action: switch.turn_on
+
+target:
+
+entity_id: switch.valvula_riego_huerto
+
+- delay:
+
+seconds: "{{ d_ps | int }}"
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_modo_simulacion
+
+state: "off"
+
+sequence:
+
+- action: switch.turn_off
+
+target:
+
+entity_id: switch.valvula_riego_huerto
+
+- action: input_boolean.turn_off
+
+target:
+
+entity_id: input_boolean.riego_valvula_automatica
+
+- delay:
+
+seconds: "{{ d_pausa | int }}"
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "Lectura final"
+
+- delay:
+
+seconds: "{{ d_lectura | int }}"
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: Completado
+
+
+riego_pulsos_zona2:
+
+alias: "Pulsos de riego Zona 2"
+
+mode: single
+
+sequence:
+
+- variables:
+
+sim: "{{ is_state('input_boolean.riego_modo_simulacion', 'on') }}"
+
+p1: "{{ states('sensor.riego_efectivo_pulso1_min') | int(10) }}"
+
+pausa: "{{ states('sensor.riego_efectivo_pausa_absorcion_min') | int(15) }}"
+
+p2: "{{ states('sensor.riego_efectivo_pulso2_zona2_min') | int(5) }}"
+
+lectura: "{{ states('sensor.riego_efectivo_lectura_final_min') | int(10) }}"
+
+umbral_p2: "{{ states('input_number.riego_umbral_pulso2') | float(10) }}"
+
+d_p1: "{{ p1 if sim else p1 * 60 }}"
+
+d_pausa: "{{ pausa if sim else pausa * 60 }}"
+
+d_p2: "{{ p2 if sim else p2 * 60 }}"
+
+d_lectura: "{{ lectura if sim else lectura * 60 }}"
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "Pulso 1 — regando"
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_valvula_automatica
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_modo_simulacion
+
+state: "off"
+
+sequence:
+
+- action: switch.turn_on
+
+target:
+
+entity_id: switch.valvula_riego_rosales_pera
+
+- action: logbook.log
+
+data:
+
+name: Riego inteligente
+
+message: >-
+
+Z2 Pulso 1 — espera {{ d_p1 | int }} s{% if sim %} (simulación){% endif %}
+
+entity_id: input_select.riego_zona2_etapa
+
+- delay:
+
+seconds: "{{ d_p1 | int }}"
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_modo_simulacion
+
+state: "off"
+
+sequence:
+
+- action: switch.turn_off
+
+target:
+
+entity_id: switch.valvula_riego_rosales_pera
+
+- action: input_boolean.turn_off
+
+target:
+
+entity_id: input_boolean.riego_valvula_automatica
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "Pausa absorción"
+
+- delay:
+
+seconds: "{{ d_pausa | int }}"
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: sensor.riego_zona_2_sensores_ok
+
+state: ok
+
+- condition: template
+
+value_template: >-
+
+{{ states('sensor.riego_minutos_hasta_amanecer') | float(999)
+
+> (p2 + lectura + states('input_number.riego_minutos_margen_amanecer') | float(30)) }}
+
+- condition: template
+
+value_template: >-
+
+{{ states('sensor.jardin_3_tex_humedad') | float(0)
+
+< (states('input_number.riego_objetivo_tex') | float(35) - umbral_p2) }}
+
+sequence:
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "Pulso 2 — refuerzo"
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_valvula_automatica
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_modo_simulacion
+
+state: "off"
+
+sequence:
+
+- action: switch.turn_on
+
+target:
+
+entity_id: switch.valvula_riego_rosales_pera
+
+- delay:
+
+seconds: "{{ d_p2 | int }}"
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_modo_simulacion
+
+state: "off"
+
+sequence:
+
+- action: switch.turn_off
+
+target:
+
+entity_id: switch.valvula_riego_rosales_pera
+
+- action: input_boolean.turn_off
+
+target:
+
+entity_id: input_boolean.riego_valvula_automatica
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "Lectura final"
+
+- delay:
+
+seconds: "{{ d_lectura | int }}"
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: Completado
+
+
+riego_pulso_suave_zona2:
+
+alias: "Pulso suave Zona 2 (humedad intermedia)"
+
+mode: single
+
+sequence:
+
+- variables:
+
+sim: "{{ is_state('input_boolean.riego_modo_simulacion', 'on') }}"
+
+ps: "{{ states('sensor.riego_efectivo_pulso_suave_min') | int(5) }}"
+
+pausa: "{{ states('sensor.riego_efectivo_pausa_suave_min') | int(5) }}"
+
+lectura: "{{ states('sensor.riego_efectivo_lectura_final_min') | int(10) }}"
+
+d_ps: "{{ ps if sim else ps * 60 }}"
+
+d_pausa: "{{ pausa if sim else pausa * 60 }}"
+
+d_lectura: "{{ lectura if sim else lectura * 60 }}"
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "Pulso suave — regando"
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_valvula_automatica
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_modo_simulacion
+
+state: "off"
+
+sequence:
+
+- action: switch.turn_on
+
+target:
+
+entity_id: switch.valvula_riego_rosales_pera
+
+- delay:
+
+seconds: "{{ d_ps | int }}"
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_modo_simulacion
+
+state: "off"
+
+sequence:
+
+- action: switch.turn_off
+
+target:
+
+entity_id: switch.valvula_riego_rosales_pera
+
+- action: input_boolean.turn_off
+
+target:
+
+entity_id: input_boolean.riego_valvula_automatica
+
+- delay:
+
+seconds: "{{ d_pausa | int }}"
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "Lectura final"
+
+- delay:
+
+seconds: "{{ d_lectura | int }}"
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: Completado
+
+
+riego_ciclo_zona1:
+
+alias: "Evaluar ciclo Zona 1"
+
+mode: single
+
+fields:
+
+es_fallback:
+
+description: Ventana fallback ola de calor
+
+default: false
+
+es_ultimo_ciclo:
+
+description: Último ciclo de la noche
+
+default: false
+
+desde_orquestador:
+
+description: Lanzado por el orquestador nocturno
+
+default: false
+
+sequence:
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_zona1_ciclo_en_curso
+
+state: "on"
+
+sequence:
+
+- stop: "Ciclo Zona 1 ya en ejecución"
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_zona1_ciclo_en_curso
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_noche_en_curso
+
+state: "on"
+
+- condition: template
+
+value_template: "{{ desde_orquestador | int(0) != 1 }}"
+
+sequence:
+
+- action: logbook.log
+
+data:
+
+name: Riego inteligente
+
+message: >-
+
+⚠️ Ciclo Z1 manual con orquestador nocturno activo —
+
+puede solaparse con el turno automático.
+
+entity_id: script.riego_ciclo_zona1
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: Iniciando
+
+- variables:
+
+ciclos_obj: "{{ states('input_number.riego_ciclos_para_hecho') | int(2) }}"
+
+confirmaciones: "{{ states('input_number.riego_zona1_confirmaciones_humedad') | int(0) }}"
+
+umbral_regar: "{{ states('input_number.riego_umbral_regar') | float(15) }}"
+
+umbral_conf: "{{ states('input_number.riego_umbral_confirmacion') | float(5) }}"
+
+umbral_desbal: "{{ states('input_number.riego_umbral_desbalance_circuito') | float(18) }}"
+
+sensores_ok: "{{ is_state('sensor.riego_zona_1_sensores_ok', 'ok') }}"
+
+umbral_temp: "{{ states('input_number.riego_umbral_temperatura_suelo') | float(28) }}"
+
+p1: "{{ states('sensor.riego_efectivo_pulso1_min') | int(10) }}"
+
+pausa_abs: "{{ states('sensor.riego_efectivo_pausa_absorcion_min') | int(15) }}"
+
+lectura: "{{ states('sensor.riego_efectivo_lectura_final_min') | int(10) }}"
+
+ps: "{{ states('sensor.riego_efectivo_pulso_suave_min') | int(5) }}"
+
+pausa_s: "{{ states('sensor.riego_efectivo_pausa_suave_min') | int(5) }}"
+
+margen: "{{ states('input_number.riego_minutos_margen_amanecer') | float(30) }}"
+
+min_am: >-
+
+{% set m = states('sensor.riego_minutos_hasta_amanecer') %}
+
+{{ m if m not in ['unknown', 'unavailable'] else 'unknown' }}
+
+margen_ok_completo: >-
+
+{{ min_am == 'unknown'
+
+or min_am | float(999) > (p1 | int + pausa_abs | int + lectura | int + margen | float) }}
+
+margen_ok_suave: >-
+
+{{ min_am == 'unknown'
+
+or min_am | float(999) > (ps | int + pausa_s | int + lectura | int + margen | float) }}
+
+temp_suelo_max: >
+
+{{
+
+[
+
+states('sensor.jardin_1_cherry_temperatura') | float(0),
+
+states('sensor.jardin_2_motto_temperatura') | float(0),
+
+states('sensor.jardin_4_escu_temperatura') | float(0)
+
+] | max
+
+}}
+
+temp_ok: "{{ temp_suelo_max < umbral_temp }}"
+
+cherry_ini: "{{ states('sensor.jardin_1_cherry_humedad') | float(0) }}"
+
+motto_ini: "{{ states('sensor.jardin_2_motto_humedad') | float(0) }}"
+
+escu_ini: "{{ states('sensor.jardin_4_escu_humedad') | float(0) }}"
+
+obj_cherry: "{{ states('input_number.riego_objetivo_cherry') | float(35) }}"
+
+obj_motto: "{{ states('input_number.riego_objetivo_motto') | float(42) }}"
+
+obj_escu: "{{ states('input_number.riego_objetivo_escu') | float(32) }}"
+
+humedad_ok_todos: >-
+
+{{ cherry_ini >= (obj_cherry - umbral_conf)
+
+and motto_ini >= (obj_motto - umbral_conf)
+
+and escu_ini >= (obj_escu - umbral_conf) }}
+
+humedad_ok_mayoria: >-
+
+{{ (1 if cherry_ini >= (obj_cherry - umbral_conf) else 0)
+
++ (1 if motto_ini >= (obj_motto - umbral_conf) else 0)
+
++ (1 if escu_ini >= (obj_escu - umbral_conf) else 0) >= 2 }}
+
+desbalance_ok: >-
+
+{{ states('sensor.riego_zona_1_desbalance') | float(99) < umbral_desbal }}
+
+necesita_riego: "{{ not humedad_ok_todos }}"
+
+riego_completo: >-
+
+{{ cherry_ini < (obj_cherry - umbral_regar)
+
+or motto_ini < (obj_motto - umbral_regar)
+
+or escu_ini < (obj_escu - umbral_regar) }}
+
+puede_regar_completo: >-
+
+{{ sensores_ok and riego_completo
+
+and (temp_ok or es_fallback | int(0) == 1) }}
+
+puede_regar_suave: >-
+
+{{ sensores_ok and necesita_riego and not riego_completo
+
+and (temp_ok or es_fallback | int(0) == 1) }}
+
+puede_confirmar: >-
+
+{{ humedad_ok_todos
+
+or (humedad_ok_mayoria and desbalance_ok) }}
+
+humedad_seco: "{{ [cherry_ini, motto_ini, escu_ini] | min }}"
+
+cultivo_seco: >-
+
+{% set hmin = humedad_seco | float %}
+
+{% if cherry_ini | float == hmin %}cherry
+
+{% elif motto_ini | float == hmin %}motto
+
+{% else %}escu{% endif %}
+
+bloqueo_ec: "{{ is_state('sensor.riego_zona_1_bloqueo_ec', 'si') }}"
+
+- action: logbook.log
+
+data:
+
+name: Riego inteligente
+
+message: >-
+
+Ciclo Z1 evaluado — completo={{ puede_regar_completo }},
+
+suave={{ puede_regar_suave }}, confirmar={{ puede_confirmar }},
+
+bloqueo_ec={{ bloqueo_ec }}, sim={{ is_state('input_boolean.riego_modo_simulacion', 'on') }}
+
+C{{ cherry_ini | round(0) }} M{{ motto_ini | round(0) }} E{{ escu_ini | round(0) }}
+
+entity_id: input_select.riego_zona1_etapa
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ not sensores_ok }}"
+
+sequence:
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "En espera — sensor no disponible"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "1"
+
+decision: sensor_fallo
+
+detalle: "{{ state_attr('sensor.riego_zona_1_sensores_ok', 'fallidos') }}"
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ es_ultimo_ciclo | int(0) == 1 }}"
+
+sequence:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "📡 Zona 1 — Sensor no disponible"
+
+mensaje: >-
+
+Fin de ciclos nocturnos sin lecturas Mi Flora fiables.
+
+Fallidos: {{ state_attr('sensor.riego_zona_1_sensores_ok', 'fallidos') }}.
+
+Revisa Bluetooth antes de confiar en el riego automático.
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_zona1_hecho_hoy
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ bloqueo_ec and necesita_riego }}"
+
+sequence:
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "En espera — encharque / EC baja"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "1"
+
+decision: bloqueo_ec
+
+detalle: "EC={{ states('sensor.riego_zona_1_bloqueo_ec') }}"
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ necesita_riego and not temp_ok
+
+and not (es_fallback | int(0) == 1) }}
+
+sequence:
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "En espera — suelo caliente"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "1"
+
+decision: espera_calor
+
+detalle: "suelo {{ temp_suelo_max | round(1) }}°C"
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ puede_regar_completo and not bloqueo_ec and not margen_ok_completo }}
+
+sequence:
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ puede_regar_suave and margen_ok_suave }}"
+
+sequence:
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona1_humedad_min_inicio
+
+data:
+
+value: "{{ humedad_seco }}"
+
+- action: input_text.set_value
+
+target:
+
+entity_id: input_text.riego_zona1_cultivo_seco_inicio
+
+data:
+
+value: "{{ cultivo_seco }}"
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona1_confirmaciones_humedad
+
+data:
+
+value: 0
+
+- action: script.riego_pulso_suave_zona1
+
+- action: input_datetime.set_datetime
+
+target:
+
+entity_id: input_datetime.riego_zona1_ultimo
+
+data:
+
+datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+- action: script.riego_evaluar_sin_progreso
+
+data:
+
+zona: "1"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "1"
+
+decision: pulso_suave_margen
+
+detalle: >-
+
+{{ cultivo_seco }}={{ humedad_seco | round(1) }}%
+
+(completo sin margen amanecer)
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ puede_confirmar }}"
+
+sequence:
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona1_confirmaciones_humedad
+
+data:
+
+value: "{{ confirmaciones + 1 }}"
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona1_ciclos_sin_progreso
+
+data:
+
+value: 0
+
+- variables:
+
+nuevas_conf: "{{ confirmaciones + 1 }}"
+
+cierra_zona: >-
+
+{{ nuevas_conf >= ciclos_obj and (
+
+humedad_ok_todos
+
+or (humedad_ok_mayoria and desbalance_ok) ) }}
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ cierra_zona }}"
+
+sequence:
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "No necesario — suelo húmedo"
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_zona1_hecho_hoy
+
+default:
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "Confirmando humedad"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "1"
+
+decision: confirmar_margen
+
+detalle: "conf={{ confirmaciones + 1 }} sin regar por margen"
+
+default:
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: En espera
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "1"
+
+decision: margen_insuficiente
+
+detalle: >-
+
+necesita riego pero amanecer en {{ min_am }} min
+
+(mín {{ (p1 | int + pausa_abs | int + lectura | int + margen | float) | int }} min)
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ puede_regar_completo and not bloqueo_ec and margen_ok_completo }}"
+
+sequence:
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona1_humedad_min_inicio
+
+data:
+
+value: "{{ humedad_seco }}"
+
+- action: input_text.set_value
+
+target:
+
+entity_id: input_text.riego_zona1_cultivo_seco_inicio
+
+data:
+
+value: "{{ cultivo_seco }}"
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona1_confirmaciones_humedad
+
+data:
+
+value: 0
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ temp_suelo_max >= umbral_temp
+
+and (es_fallback | int(0) == 1)
+
+and not is_state('input_boolean.riego_fallback_z1_notificado', 'on') }}
+
+sequence:
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "Ola de calor — riego nocturno"
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "🌡️ Zona 1 — Riego fallback ola de calor"
+
+mensaje: >-
+
+Suelo a {{ temp_suelo_max | round(1) }}°C pero humedad baja.
+
+Riego forzado en ciclo nocturno.
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_fallback_z1_notificado
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ temp_suelo_max >= umbral_temp
+
+and (es_fallback | int(0) == 1) }}
+
+sequence:
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "Ola de calor — riego nocturno"
+
+- action: script.riego_pulsos_zona1
+
+- action: input_datetime.set_datetime
+
+target:
+
+entity_id: input_datetime.riego_zona1_ultimo
+
+data:
+
+datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+- action: script.alerta_caudal_zona1
+
+data:
+
+cherry_inicio: "{{ cherry_ini }}"
+
+motto_inicio: "{{ motto_ini }}"
+
+escu_inicio: "{{ escu_ini }}"
+
+- action: script.riego_evaluar_sin_progreso
+
+data:
+
+zona: "1"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "1"
+
+decision: regar_completo
+
+detalle: >-
+
+{{ cultivo_seco }}={{ humedad_seco | round(1) }}%
+
+C{{ cherry_ini | round(0) }} M{{ motto_ini | round(0) }} E{{ escu_ini | round(0) }}
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ puede_regar_suave and not bloqueo_ec }}"
+
+sequence:
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona1_humedad_min_inicio
+
+data:
+
+value: "{{ humedad_seco }}"
+
+- action: input_text.set_value
+
+target:
+
+entity_id: input_text.riego_zona1_cultivo_seco_inicio
+
+data:
+
+value: "{{ cultivo_seco }}"
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona1_confirmaciones_humedad
+
+data:
+
+value: 0
+
+- action: script.riego_pulso_suave_zona1
+
+- action: input_datetime.set_datetime
+
+target:
+
+entity_id: input_datetime.riego_zona1_ultimo
+
+data:
+
+datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+- action: script.riego_evaluar_sin_progreso
+
+data:
+
+zona: "1"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "1"
+
+decision: pulso_suave
+
+detalle: "{{ cultivo_seco }}={{ humedad_seco | round(1) }}%"
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ puede_confirmar }}"
+
+sequence:
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona1_confirmaciones_humedad
+
+data:
+
+value: "{{ confirmaciones + 1 }}"
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona1_ciclos_sin_progreso
+
+data:
+
+value: 0
+
+- variables:
+
+nuevas_conf: "{{ confirmaciones + 1 }}"
+
+cierra_zona: >-
+
+{{ nuevas_conf >= ciclos_obj and (
+
+humedad_ok_todos
+
+or (humedad_ok_mayoria and desbalance_ok) ) }}
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ cierra_zona }}"
+
+sequence:
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "No necesario — suelo húmedo"
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_zona1_hecho_hoy
+
+default:
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "Confirmando humedad"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "1"
+
+decision: confirmar
+
+detalle: >-
+
+conf={{ confirmaciones + 1 }}/{{ ciclos_obj }}
+
+C{{ cherry_ini | round(0) }} M{{ motto_ini | round(0) }} E{{ escu_ini | round(0) }}
+
+- action: input_boolean.turn_off
+
+target:
+
+entity_id: input_boolean.riego_zona1_ciclo_en_curso
+
+
+riego_ciclo_zona2:
+
+alias: "Evaluar ciclo Zona 2"
+
+mode: single
+
+fields:
+
+es_fallback:
+
+default: false
+
+es_ultimo_ciclo:
+
+default: false
+
+desde_orquestador:
+
+default: false
+
+sequence:
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_zona2_ciclo_en_curso
+
+state: "on"
+
+sequence:
+
+- stop: "Ciclo Zona 2 ya en ejecución"
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_zona2_ciclo_en_curso
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_noche_en_curso
+
+state: "on"
+
+- condition: template
+
+value_template: "{{ desde_orquestador | int(0) != 1 }}"
+
+sequence:
+
+- action: logbook.log
+
+data:
+
+name: Riego inteligente
+
+message: >-
+
+⚠️ Ciclo Z2 manual con orquestador nocturno activo —
+
+puede solaparse con el turno automático.
+
+entity_id: script.riego_ciclo_zona2
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: Iniciando
+
+- variables:
+
+ciclos_obj: "{{ states('input_number.riego_ciclos_para_hecho') | int(2) }}"
+
+confirmaciones: "{{ states('input_number.riego_zona2_confirmaciones_humedad') | int(0) }}"
+
+umbral_regar: "{{ states('input_number.riego_umbral_regar') | float(15) }}"
+
+umbral_conf: "{{ states('input_number.riego_umbral_confirmacion') | float(5) }}"
+
+sensores_ok: "{{ is_state('sensor.riego_zona_2_sensores_ok', 'ok') }}"
+
+umbral_temp: "{{ states('input_number.riego_umbral_temperatura_suelo') | float(28) }}"
+
+p1: "{{ states('sensor.riego_efectivo_pulso1_min') | int(10) }}"
+
+pausa_abs: "{{ states('sensor.riego_efectivo_pausa_absorcion_min') | int(15) }}"
+
+lectura: "{{ states('sensor.riego_efectivo_lectura_final_min') | int(10) }}"
+
+ps: "{{ states('sensor.riego_efectivo_pulso_suave_min') | int(5) }}"
+
+pausa_s: "{{ states('sensor.riego_efectivo_pausa_suave_min') | int(5) }}"
+
+margen: "{{ states('input_number.riego_minutos_margen_amanecer') | float(30) }}"
+
+min_am: >-
+
+{% set m = states('sensor.riego_minutos_hasta_amanecer') %}
+
+{{ m if m not in ['unknown', 'unavailable'] else 'unknown' }}
+
+margen_ok_completo: >-
+
+{{ min_am == 'unknown'
+
+or min_am | float(999) > (p1 | int + pausa_abs | int + lectura | int + margen | float) }}
+
+margen_ok_suave: >-
+
+{{ min_am == 'unknown'
+
+or min_am | float(999) > (ps | int + pausa_s | int + lectura | int + margen | float) }}
+
+temp_suelo: "{{ states('sensor.jardin_3_tex_temperatura') | float(0) }}"
+
+temp_ok: "{{ temp_suelo < umbral_temp }}"
+
+tex_ini: "{{ states('sensor.jardin_3_tex_humedad') | float(0) }}"
+
+obj_tex: "{{ states('input_number.riego_objetivo_tex') | float(35) }}"
+
+humedad_ok: "{{ tex_ini >= (obj_tex - umbral_conf) }}"
+
+necesita_riego: "{{ not humedad_ok }}"
+
+riego_completo: "{{ tex_ini < (obj_tex - umbral_regar) }}"
+
+puede_regar_completo: >-
+
+{{ sensores_ok and riego_completo
+
+and (temp_ok or es_fallback | int(0) == 1) }}
+
+puede_regar_suave: >-
+
+{{ sensores_ok and necesita_riego and not riego_completo
+
+and (temp_ok or es_fallback | int(0) == 1) }}
+
+bloqueo_ec: "{{ is_state('sensor.riego_zona_2_bloqueo_ec', 'si') }}"
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ not sensores_ok }}"
+
+sequence:
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "En espera — sensor no disponible"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "2"
+
+decision: sensor_fallo
+
+detalle: "{{ state_attr('sensor.riego_zona_2_sensores_ok', 'fallidos') }}"
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ es_ultimo_ciclo | int(0) == 1 }}"
+
+sequence:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "📡 Zona 2 — Sensor no disponible"
+
+mensaje: >-
+
+Fin de ciclos nocturnos sin lecturas Mi Flora fiables.
+
+Fallidos: {{ state_attr('sensor.riego_zona_2_sensores_ok', 'fallidos') }}.
+
+Revisa Bluetooth y rosales a ojo.
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_zona2_hecho_hoy
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ bloqueo_ec and necesita_riego }}"
+
+sequence:
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "En espera — encharque / EC baja"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "2"
+
+decision: bloqueo_ec
+
+detalle: "tex={{ tex_ini | round(1) }}%"
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ necesita_riego and not temp_ok
+
+and not (es_fallback | int(0) == 1) }}
+
+sequence:
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "En espera — suelo caliente"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "2"
+
+decision: espera_calor
+
+detalle: "suelo {{ temp_suelo | round(1) }}°C"
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ puede_regar_completo and not bloqueo_ec and not margen_ok_completo }}
+
+sequence:
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ puede_regar_suave and margen_ok_suave }}"
+
+sequence:
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona2_humedad_inicio
+
+data:
+
+value: "{{ tex_ini }}"
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona2_confirmaciones_humedad
+
+data:
+
+value: 0
+
+- action: script.riego_pulso_suave_zona2
+
+- action: input_datetime.set_datetime
+
+target:
+
+entity_id: input_datetime.riego_zona2_ultimo
+
+data:
+
+datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+- action: script.riego_evaluar_sin_progreso
+
+data:
+
+zona: "2"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "2"
+
+decision: pulso_suave_margen
+
+detalle: "tex={{ tex_ini | round(1) }}% (completo sin margen)"
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ humedad_ok }}"
+
+sequence:
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona2_confirmaciones_humedad
+
+data:
+
+value: "{{ confirmaciones + 1 }}"
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona2_ciclos_sin_progreso
+
+data:
+
+value: 0
+
+- variables:
+
+nuevas_conf: "{{ confirmaciones + 1 }}"
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ nuevas_conf >= ciclos_obj }}"
+
+sequence:
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "No necesario — suelo húmedo"
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_zona2_hecho_hoy
+
+default:
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "Confirmando humedad"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "2"
+
+decision: confirmar_margen
+
+detalle: "conf={{ confirmaciones + 1 }} tex={{ tex_ini | round(1) }}%"
+
+default:
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: En espera
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "2"
+
+decision: margen_insuficiente
+
+detalle: >-
+
+tex={{ tex_ini | round(1) }}% amanecer {{ min_am }} min
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ puede_regar_completo and not bloqueo_ec and margen_ok_completo }}"
+
+sequence:
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona2_humedad_inicio
+
+data:
+
+value: "{{ tex_ini }}"
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona2_confirmaciones_humedad
+
+data:
+
+value: 0
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ temp_suelo >= umbral_temp
+
+and (es_fallback | int(0) == 1)
+
+and not is_state('input_boolean.riego_fallback_z2_notificado', 'on') }}
+
+sequence:
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "Ola de calor — riego nocturno"
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "🌡️ Zona 2 — Riego fallback ola de calor"
+
+mensaje: >-
+
+Suelo a {{ temp_suelo | round(1) }}°C pero humedad baja.
+
+Riego forzado en ciclo nocturno.
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_fallback_z2_notificado
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ temp_suelo >= umbral_temp
+
+and (es_fallback | int(0) == 1) }}
+
+sequence:
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "Ola de calor — riego nocturno"
+
+- action: script.riego_pulsos_zona2
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona2_regados_noche
+
+data:
+
+value: "{{ states('input_number.riego_zona2_regados_noche') | int(0) + 1 }}"
+
+- action: input_datetime.set_datetime
+
+target:
+
+entity_id: input_datetime.riego_zona2_ultimo
+
+data:
+
+datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+- action: script.alerta_caudal_zona2
+
+data:
+
+tex_inicio: "{{ tex_ini }}"
+
+- action: script.riego_evaluar_sin_progreso
+
+data:
+
+zona: "2"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "2"
+
+decision: regar_completo
+
+detalle: "tex={{ tex_ini | round(1) }}%"
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ puede_regar_suave and not bloqueo_ec }}"
+
+sequence:
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona2_humedad_inicio
+
+data:
+
+value: "{{ tex_ini }}"
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona2_confirmaciones_humedad
+
+data:
+
+value: 0
+
+- action: script.riego_pulso_suave_zona2
+
+- action: input_datetime.set_datetime
+
+target:
+
+entity_id: input_datetime.riego_zona2_ultimo
+
+data:
+
+datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+
+- action: script.riego_evaluar_sin_progreso
+
+data:
+
+zona: "2"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "2"
+
+decision: pulso_suave
+
+detalle: "tex={{ tex_ini | round(1) }}%"
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ humedad_ok }}"
+
+sequence:
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona2_confirmaciones_humedad
+
+data:
+
+value: "{{ confirmaciones + 1 }}"
+
+- action: input_number.set_value
+
+target:
+
+entity_id: input_number.riego_zona2_ciclos_sin_progreso
+
+data:
+
+value: 0
+
+- variables:
+
+nuevas_conf: "{{ confirmaciones + 1 }}"
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ nuevas_conf >= ciclos_obj }}"
+
+sequence:
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "No necesario — suelo húmedo"
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_zona2_hecho_hoy
+
+default:
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "Confirmando humedad"
+
+- action: script.riego_registrar_decision
+
+data:
+
+zona: "2"
+
+decision: confirmar
+
+detalle: "conf={{ confirmaciones + 1 }}/{{ ciclos_obj }} tex={{ tex_ini | round(1) }}%"
+
+- action: input_boolean.turn_off
+
+target:
+
+entity_id: input_boolean.riego_zona2_ciclo_en_curso
+
+
+riego_noche_alternada:
+
+alias: "Orquestador riego nocturno alternado"
+
+mode: single
+
+sequence:
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_activo
+
+state: "off"
+
+sequence:
+
+- stop: "Riego automático desactivado (riego_activo = off)"
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_noche_en_curso
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_modo_simulacion
+
+state: "on"
+
+sequence:
+
+- action: logbook.log
+
+data:
+
+name: Riego inteligente
+
+message: >-
+
+Simulación ON — tiempos de prueba: pulsos/pausas/lectura 1 min→1 s,
+
+pausa entre ciclos 2 min→2 s; válvulas no se abren.
+
+entity_id: input_boolean.riego_modo_simulacion
+
+- variables:
+
+max_ciclos: "{{ states('input_number.riego_max_ciclos_noche') | int(8) }}"
+
+sim: "{{ is_state('input_boolean.riego_modo_simulacion', 'on') }}"
+
+pausa: "{{ states('sensor.riego_efectivo_pausa_entre_ciclos') | int(35) }}"
+
+d_pausa: "{{ pausa if sim else pausa * 60 }}"
+
+umbral_grave: "{{ states('input_number.riego_umbral_desfase_grave') | float(15) }}"
+
+umbral_conf: "{{ states('input_number.riego_umbral_confirmacion') | float(5) }}"
+
+- repeat:
+
+while:
+
+- condition: template
+
+value_template: >-
+
+{{ not (is_state('input_boolean.riego_zona1_hecho_hoy', 'on')
+
+and is_state('input_boolean.riego_zona2_hecho_hoy', 'on')) }}
+
+- condition: template
+
+value_template: "{{ repeat.index <= max_ciclos }}"
+
+- condition: sun
+
+after: sunset
+
+before: sunrise
+
+- condition: template
+
+value_template: >-
+
+{{ states('sensor.riego_minutos_hasta_amanecer') | float(999)
+
+> states('input_number.riego_minutos_margen_amanecer') | float(30) }}
+
+sequence:
+
+- variables:
+
+es_fallback: "{{ 1 if repeat.index >= (max_ciclos | int - 2) else 0 }}"
+
+es_ultimo: "{{ 1 if repeat.index == max_ciclos | int else 0 }}"
+
+zona_ejecutada: "false"
+
+turn_siguiente: ""
+
+prioridad_z1: >-
+
+{{ states('sensor.riego_zona_1_desfase_max') | float(0) >= umbral_grave
+
+and states('sensor.riego_tex_desfase') | float(99) <= umbral_conf
+
+and not is_state('input_boolean.riego_zona1_hecho_hoy', 'on') }}
+
+prioridad_z2: >-
+
+{{ states('sensor.riego_tex_desfase') | float(0) >= umbral_grave
+
+and states('sensor.riego_zona_1_desfase_max') | float(99) <= umbral_conf
+
+and not is_state('input_boolean.riego_zona2_hecho_hoy', 'on') }}
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ is_state('input_select.riego_turno_ciclo', 'zona_1')
+
+and is_state('input_boolean.riego_zona1_hecho_hoy', 'on')
+
+and not is_state('input_boolean.riego_zona2_hecho_hoy', 'on') }}
+
+sequence:
+
+- action: input_select.select_option
+
+target:
+
+entity_id: input_select.riego_turno_ciclo
+
+data:
+
+option: zona_2
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ is_state('input_select.riego_turno_ciclo', 'zona_2')
+
+and is_state('input_boolean.riego_zona2_hecho_hoy', 'on')
+
+and not is_state('input_boolean.riego_zona1_hecho_hoy', 'on') }}
+
+sequence:
+
+- action: input_select.select_option
+
+target:
+
+entity_id: input_select.riego_turno_ciclo
+
+data:
+
+option: zona_1
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ prioridad_z1 }}"
+
+sequence:
+
+- variables:
+
+zona_ejecutada: "true"
+
+turn_siguiente: zona_2
+
+- action: script.riego_ciclo_zona1
+
+data:
+
+es_fallback: "{{ es_fallback }}"
+
+es_ultimo_ciclo: "{{ es_ultimo }}"
+
+desde_orquestador: "1"
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ not is_state('input_boolean.riego_zona1_hecho_hoy', 'on')
+
+and prioridad_z1 }}
+
+sequence:
+
+- delay:
+
+seconds: "{{ d_pausa | int }}"
+
+- action: script.riego_ciclo_zona1
+
+data:
+
+es_fallback: "{{ es_fallback }}"
+
+es_ultimo_ciclo: "{{ es_ultimo }}"
+
+desde_orquestador: "1"
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ prioridad_z2 }}"
+
+sequence:
+
+- variables:
+
+zona_ejecutada: "true"
+
+turn_siguiente: zona_1
+
+- action: script.riego_ciclo_zona2
+
+data:
+
+es_fallback: "{{ es_fallback }}"
+
+es_ultimo_ciclo: "{{ es_ultimo }}"
+
+desde_orquestador: "1"
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ not is_state('input_boolean.riego_zona2_hecho_hoy', 'on')
+
+and prioridad_z2 }}
+
+sequence:
+
+- delay:
+
+seconds: "{{ d_pausa | int }}"
+
+- action: script.riego_ciclo_zona2
+
+data:
+
+es_fallback: "{{ es_fallback }}"
+
+es_ultimo_ciclo: "{{ es_ultimo }}"
+
+desde_orquestador: "1"
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ is_state('input_select.riego_turno_ciclo', 'zona_1')
+
+and not is_state('input_boolean.riego_zona1_hecho_hoy', 'on') }}
+
+sequence:
+
+- variables:
+
+zona_ejecutada: "true"
+
+- action: script.riego_ciclo_zona1
+
+data:
+
+es_fallback: "{{ es_fallback }}"
+
+es_ultimo_ciclo: "{{ es_ultimo }}"
+
+desde_orquestador: "1"
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ is_state('input_select.riego_turno_ciclo', 'zona_2')
+
+and not is_state('input_boolean.riego_zona2_hecho_hoy', 'on') }}
+
+sequence:
+
+- variables:
+
+zona_ejecutada: "true"
+
+- action: script.riego_ciclo_zona2
+
+data:
+
+es_fallback: "{{ es_fallback }}"
+
+es_ultimo_ciclo: "{{ es_ultimo }}"
+
+desde_orquestador: "1"
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ is_state('input_boolean.riego_zona1_hecho_hoy', 'on')
+
+and is_state('input_boolean.riego_zona2_hecho_hoy', 'on') }}
+
+sequence: []
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ turn_siguiente != '' }}"
+
+sequence:
+
+- action: input_select.select_option
+
+target:
+
+entity_id: input_select.riego_turno_ciclo
+
+data:
+
+option: "{{ turn_siguiente }}"
+
+- delay:
+
+seconds: "{{ d_pausa | int }}"
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ zona_ejecutada == 'true' }}"
+
+sequence:
+
+- action: input_select.select_option
+
+target:
+
+entity_id: input_select.riego_turno_ciclo
+
+data:
+
+option: >-
+
+{{ 'zona_2' if is_state('input_select.riego_turno_ciclo', 'zona_1')
+
+else 'zona_1' }}
+
+- delay:
+
+seconds: "{{ d_pausa | int }}"
+
+default:
+
+- action: input_select.select_option
+
+target:
+
+entity_id: input_select.riego_turno_ciclo
+
+data:
+
+option: >-
+
+{{ 'zona_2' if is_state('input_select.riego_turno_ciclo', 'zona_1')
+
+else 'zona_1' }}
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: >-
+
+{{ not (is_state('input_boolean.riego_zona1_hecho_hoy', 'on')
+
+and is_state('input_boolean.riego_zona2_hecho_hoy', 'on')) }}
+
+- condition: or
+
+conditions:
+
+- condition: state
+
+entity_id: sensor.riego_zona_1_estado
+
+state:
+
+- seco
+
+- sensor_fallo
+
+- condition: state
+
+entity_id: sensor.riego_zona_2_estado
+
+state:
+
+- seco
+
+- sensor_fallo
+
+sequence:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "🌙 Riego nocturno — incompleto"
+
+mensaje: >-
+
+Fin de ventana nocturna o máximo de ciclos.
+
+Z1: {{ states('sensor.riego_zona_1_estado') }}
+
+(hecha: {{ 'sí' if is_state('input_boolean.riego_zona1_hecho_hoy', 'on') else 'no' }}).
+
+Z2: {{ states('sensor.riego_zona_2_estado') }}
+
+(hecha: {{ 'sí' if is_state('input_boolean.riego_zona2_hecho_hoy', 'on') else 'no' }}).
+
+Revisa humedad y goteros al amanecer.
+
+- choose:
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_rosales_aviso_enviado
+
+state: "off"
+
+- condition: template
+
+value_template: >-
+
+{{ states('input_number.riego_zona2_regados_noche') | int(0) >= 3
+
+and is_state('sensor.riego_zona_2_sensores_ok', 'ok')
+
+and states('sensor.riego_tex_desfase') | float(99) <=
+
+states('input_number.riego_umbral_confirmacion') | float(5) }}
+
+sequence:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "🌹 Zona 2 — Revisar rosales"
+
+mensaje: >-
+
+Tex OK tras {{ states('input_number.riego_zona2_regados_noche') | int }} riegos.
+
+Rosales sin sensor: comprueba a ojo si necesitan más o menos agua.
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_rosales_aviso_enviado
+
+- conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_rosales_aviso_enviado
+
+state: "off"
+
+- condition: template
+
+value_template: >-
+
+{{ states('input_number.riego_zona2_regados_noche') | int(0) == 0
+
+and is_state('sensor.riego_zona_2_sensores_ok', 'ok')
+
+and states('sensor.riego_tex_desfase') | float(99) <=
+
+states('input_number.riego_umbral_confirmacion') | float(5)
+
+and states('sensor.riego_zona_2_temp_suelo') | float(0) >=
+
+states('input_number.riego_umbral_temperatura_suelo') | float(28) }}
+
+sequence:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "🌹 Zona 2 — Revisar rosales (calor)"
+
+mensaje: >-
+
+Tex OK sin regar pero suelo caliente ({{ states('sensor.riego_zona_2_temp_suelo') }}°C).
+
+Rosales sin sensor: pueden necesitar riego manual.
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_rosales_aviso_enviado
+
+- action: input_boolean.turn_off
+
+target:
+
+entity_id: input_boolean.riego_noche_en_curso
+
+- choose:
+
+- conditions:
+
+- condition: sun
+
+after: sunrise
+
+before: sunset
+
+sequence:
+
+- action: script.riego_reset_contadores_noche
+
+
+riego_recuperar_estado:
+
+alias: "Recuperar estado colgado (válvulas y etapas)"
+
+description: >-
+
+Corrige etapa «regando» sin válvula abierta o ciclo interrumpido
+
+(reinicio HA, recarga de scripts, etc.)
+
+mode: single
+
+sequence:
+
+- variables:
+
+etapas_regando:
+
+- "Pulso 1 — regando"
+
+- "Pulso 2 — refuerzo"
+
+- "Pulso suave — regando"
+
+sim: "{{ is_state('input_boolean.riego_modo_simulacion', 'on') }}"
+
+max_z1: >-
+
+{% set t = states('sensor.riego_efectivo_pulso1_min') | int(10)
+
++ states('sensor.riego_efectivo_pausa_absorcion_min') | int(15)
+
++ states('sensor.riego_efectivo_pulso2_zona1_min') | int(8)
+
++ states('sensor.riego_efectivo_lectura_final_min') | int(10) %}
+
+{{ (t if sim else t * 60) + 120 }}
+
+max_z2: >-
+
+{% set t = states('sensor.riego_efectivo_pulso1_min') | int(10)
+
++ states('sensor.riego_efectivo_pausa_absorcion_min') | int(15)
+
++ states('sensor.riego_efectivo_pulso2_zona2_min') | int(5)
+
++ states('sensor.riego_efectivo_lectura_final_min') | int(10) %}
+
+{{ (t if sim else t * 60) + 120 }}
+
+- repeat:
+
+for_each:
+
+- zona: "1"
+
+etapa_entity: input_select.riego_zona1_etapa
+
+ciclo_entity: input_boolean.riego_zona1_ciclo_en_curso
+
+valvula_entity: switch.valvula_riego_huerto
+
+max_seg: "{{ max_z1 | int }}"
+
+- zona: "2"
+
+etapa_entity: input_select.riego_zona2_etapa
+
+ciclo_entity: input_boolean.riego_zona2_ciclo_en_curso
+
+valvula_entity: switch.valvula_riego_rosales_pera
+
+max_seg: "{{ max_z2 | int }}"
+
+sequence:
+
+- variables:
+
+etapa: "{{ states(repeat.item.etapa_entity) }}"
+
+ciclo_on: "{{ is_state(repeat.item.ciclo_entity, 'on') }}"
+
+colgado: >-
+
+{% set ent = repeat.item.etapa_entity %}
+
+{% set secs = (as_timestamp(now())
+
+- as_timestamp(states[ent].last_changed)) | int(0) %}
+
+{{ etapa in etapas_regando
+
+and (not ciclo_on or secs > (repeat.item.max_seg | int)) }}
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ colgado }}"
+
+sequence:
+
+- action: switch.turn_off
+
+target:
+
+entity_id: "{{ repeat.item.valvula_entity }}"
+
+- action: input_boolean.turn_off
+
+target:
+
+entity_id:
+
+- input_boolean.riego_valvula_automatica
+
+- "{{ repeat.item.ciclo_entity }}"
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ repeat.item.zona == '1' }}"
+
+sequence:
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: "En espera"
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ repeat.item.zona == '2' }}"
+
+sequence:
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: "En espera"
+
+- action: logbook.log
+
+data:
+
+name: Riego inteligente
+
+message: >-
+
+Z{{ repeat.item.zona }} recuperada — etapa «{{ etapa }}»
+
+con ciclo {{ 'on' if ciclo_on else 'off' }}; válvula cerrada y etapa En espera.
+
+entity_id: "{{ repeat.item.etapa_entity }}"
+
+
+riego_test_logica:
+
+alias: "Test lógica riego (diagnóstico sin válvulas)"
+
+description: Resume umbrales y decisión actual de cada zona sin modificar contadores
+
+mode: single
+
+sequence:
+
+- action: logbook.log
+
+data:
+
+name: Riego inteligente
+
+message: >-
+
+Test lógica — Z1 {{ states('sensor.riego_zona_1_estado') }}
+
+(desfase max {{ states('sensor.riego_zona_1_desfase_max') }},
+
+EC {{ states('sensor.riego_zona_1_bloqueo_ec') }}) |
+
+Z2 {{ states('sensor.riego_zona_2_estado') }}
+
+(desfase {{ states('sensor.riego_tex_desfase') }},
+
+EC {{ states('sensor.riego_zona_2_bloqueo_ec') }}) |
+
+amanecer {{ states('sensor.riego_minutos_hasta_amanecer') }} min
+
+entity_id: input_boolean.riego_activo
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "🧪 Diagnóstico lógica riego"
+
+mensaje: >-
+
+Z1: estado={{ states('sensor.riego_zona_1_estado') }},
+
+desfase_max={{ states('sensor.riego_zona_1_desfase_max') }} pts,
+
+bloqueo EC={{ states('sensor.riego_zona_1_bloqueo_ec') }},
+
+confirmaciones={{ states('input_number.riego_zona1_confirmaciones_humedad') }},
+
+sin_progreso={{ states('input_number.riego_zona1_ciclos_sin_progreso') }}.
+
+Z2: estado={{ states('sensor.riego_zona_2_estado') }},
+
+desfase={{ states('sensor.riego_tex_desfase') }} pts,
+
+bloqueo EC={{ states('sensor.riego_zona_2_bloqueo_ec') }},
+
+confirmaciones={{ states('input_number.riego_zona2_confirmaciones_humedad') }},
+
+regados_noche={{ states('input_number.riego_zona2_regados_noche') }}.
+
+Clima={{ states('sensor.riego_clima_permitido') }},
+
+minutos_amanecer={{ states('sensor.riego_minutos_hasta_amanecer') }}.
+
+
+automation:
+
+# ---------------------------------------------------------------------------
+
+# Orquestador nocturno — ciclos alternados Z1/Z2
+
+# ---------------------------------------------------------------------------
+
+- id: riego_orquestador_noche
+
+alias: "Riego Orquestador Nocturno"
+
+description: "Ciclos alternados con confirmación de humedad antes de cerrar cada zona"
+
+mode: single
+
+triggers:
+
+- trigger: sun
+
+event: sunset
+
+offset: "+00:15:00"
+
+conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_activo
+
+state: "on"
+
+- condition: template
+
+value_template: >-
+
+{{ is_state('input_boolean.riego_forzar_pese_clima', 'on')
+
+or is_state('sensor.riego_clima_permitido', 'ok')
+
+or is_state('sensor.riego_clima_permitido', 'ok_sin_tiempo') }}
+
+- condition: not
+
+conditions:
+
+- condition: state
+
+entity_id: weather.aemet
+
+state:
+
+- rainy
+
+- pouring
+
+- condition: template
+
+value_template: >-
+
+{{ is_state('input_boolean.riego_forzar_pese_clima', 'on')
+
+or states('sensor.aemet_rain') in ['unavailable', 'unknown']
+
+or states('sensor.aemet_rain') | float(0) < 1 }}
+
+- condition: state
+
+entity_id: input_boolean.riego_noche_en_curso
+
+state: "off"
+
+- condition: state
+
+entity_id: sensor.riego_configuracion_ok
+
+state: ok
+
+- condition: template
+
+value_template: >-
+
+{{ not (is_state('input_boolean.riego_zona1_hecho_hoy', 'on')
+
+and is_state('input_boolean.riego_zona2_hecho_hoy', 'on')) }}
+
+actions:
+
+- action: script.riego_noche_alternada
+
+
+# ---------------------------------------------------------------------------
+
+# Seguridad — cerrar válvulas al arrancar Home Assistant
+
+# ---------------------------------------------------------------------------
+
+- id: riego_seguridad_arranque
+
+alias: "Riego — Cerrar válvulas al arrancar"
+
+description: "Evita válvulas abiertas tras reinicio de HA"
+
+mode: single
+
+triggers:
+
+- trigger: homeassistant
+
+event: start
+
+actions:
+
+- action: switch.turn_off
+
+target:
+
+entity_id:
+
+- switch.valvula_riego_huerto
+
+- switch.valvula_riego_rosales_pera
+
+- action: input_boolean.turn_off
+
+target:
+
+entity_id:
+
+- input_boolean.riego_noche_en_curso
+
+- input_boolean.riego_valvula_automatica
+
+- input_boolean.riego_zona1_ciclo_en_curso
+
+- input_boolean.riego_zona2_ciclo_en_curso
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: En espera
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: En espera
+
+- action: script.riego_recuperar_estado
+
+
+# ---------------------------------------------------------------------------
+
+# Recuperar etapa «regando» sin ciclo activo o ciclo colgado
+
+# ---------------------------------------------------------------------------
+
+- id: riego_recuperar_estado_colgado
+
+alias: "Riego — Recuperar etapa/valvula inconsistente"
+
+description: >-
+
+Corrige Z1/Z2 en «regando» con válvula cerrada tras interrupción
+
+(reinicio, recarga scripts, ciclo abortado)
+
+mode: single
+
+triggers:
+
+- trigger: state
+
+entity_id:
+
+- input_boolean.riego_zona1_ciclo_en_curso
+
+- input_boolean.riego_zona2_ciclo_en_curso
+
+from: "on"
+
+to: "off"
+
+- trigger: time_pattern
+
+minutes: "/5"
+
+actions:
+
+- action: script.riego_recuperar_estado
+
+
+# ---------------------------------------------------------------------------
+
+# Reset diario (nuevo ciclo al amanecer)
+
+# ---------------------------------------------------------------------------
+
+- id: riego_reset_diario
+
+alias: "Riego — Reset diario"
+
+description: "Permite nuevos intentos de riego cada amanecer (si el orquestador no está activo)"
+
+mode: single
+
+triggers:
+
+- trigger: sun
+
+event: sunrise
+
+conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_noche_en_curso
+
+state: "off"
+
+actions:
+
+- action: input_boolean.turn_off
+
+target:
+
+entity_id:
+
+- input_boolean.riego_zona1_hecho_hoy
+
+- input_boolean.riego_zona2_hecho_hoy
+
+- action: script.riego_reset_contadores_noche
+
+- action: input_select.select_option
+
+target:
+
+entity_id: input_select.riego_turno_ciclo
+
+data:
+
+option: zona_1
+
+- action: script.riego_etapa_zona1
+
+data:
+
+etapa: En espera
+
+- action: script.riego_etapa_zona2
+
+data:
+
+etapa: En espera
+
+
+# ---------------------------------------------------------------------------
+
+# Reset contadores si el orquestador termina después del amanecer
+
+# ---------------------------------------------------------------------------
+
+- id: riego_reset_post_noche
+
+alias: "Riego — Reset contadores post-noche"
+
+description: "Limpia contadores si la noche terminó de día (amanecer perdido)"
+
+mode: single
+
+triggers:
+
+- trigger: state
+
+entity_id: input_boolean.riego_noche_en_curso
+
+from: "on"
+
+to: "off"
+
+conditions:
+
+- condition: sun
+
+after: sunrise
+
+before: sunset
+
+actions:
+
+- action: script.riego_reset_contadores_noche
+
+
+# ---------------------------------------------------------------------------
+
+# Aviso si se abre válvula manualmente durante orquestador
+
+# ---------------------------------------------------------------------------
+
+- id: riego_aviso_valvula_manual
+
+alias: "Riego — Aviso válvula manual en noche"
+
+description: "Notifica si una válvula se abre fuera de etapa de regado nocturno"
+
+mode: single
+
+triggers:
+
+- trigger: state
+
+entity_id:
+
+- switch.valvula_riego_huerto
+
+- switch.valvula_riego_rosales_pera
+
+to: "on"
+
+conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_noche_en_curso
+
+state: "on"
+
+- condition: state
+
+entity_id: input_boolean.riego_valvula_automatica
+
+state: "off"
+
+for:
+
+seconds: 2
+
+actions:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "⚠️ Válvula abierta manualmente"
+
+mensaje: >-
+
+{{ trigger.entity_id }} activada durante orquestador nocturno
+
+sin etapa de regado. Ciérrala si no fue intencional.
+
+
+# ---------------------------------------------------------------------------
+
+# Aviso Bluetooth — sensores caídos 2 h seguidas
+
+# ---------------------------------------------------------------------------
+
+- id: riego_aviso_bluetooth
+
+alias: "Riego — Aviso Bluetooth sensores caídos"
+
+description: "Recuerda revisar Mi Flora si fallan 2 h antes de la noche"
+
+mode: single
+
+triggers:
+
+- trigger: state
+
+entity_id:
+
+- sensor.riego_zona_1_sensores_ok
+
+- sensor.riego_zona_2_sensores_ok
+
+to: fallo
+
+for:
+
+hours: 2
+
+conditions:
+
+- condition: state
+
+entity_id: input_boolean.riego_activo
+
+state: "on"
+
+- condition: state
+
+entity_id: input_boolean.riego_bluetooth_aviso_enviado
+
+state: "off"
+
+actions:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "📡 Mi Flora — Revisar Bluetooth"
+
+mensaje: >-
+
+Sensores en fallo ≥2 h: Z1={{ states('sensor.riego_zona_1_sensores_ok') }}
+
+({{ state_attr('sensor.riego_zona_1_sensores_ok', 'fallidos') }}),
+
+Z2={{ states('sensor.riego_zona_2_sensores_ok') }}
+
+({{ state_attr('sensor.riego_zona_2_sensores_ok', 'fallidos') }}).
+
+Acerca el proxy Bluetooth antes del riego nocturno.
+
+- action: input_boolean.turn_on
+
+target:
+
+entity_id: input_boolean.riego_bluetooth_aviso_enviado
+
+
+# ---------------------------------------------------------------------------
+
+# Configuración de umbrales incoherente
+
+# ---------------------------------------------------------------------------
+
+- id: alerta_riego_config_error
+
+alias: "Alerta configuración riego incoherente"
+
+mode: single
+
+triggers:
+
+- trigger: state
+
+entity_id: sensor.riego_configuracion_ok
+
+to: error
+
+actions:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "⚙️ Riego — Revisar umbrales"
+
+mensaje: "{{ state_attr('sensor.riego_configuracion_ok', 'mensaje') }}"
+
+
+# ---------------------------------------------------------------------------
+
+# Desbalance entre cultivos del mismo circuito (Zona 1)
+
+# ---------------------------------------------------------------------------
+
+- id: alerta_desbalance_zona1
+
+alias: "Alerta desbalance goteros Zona 1"
+
+description: "Avisa si un cultivo del circuito 1 recibe mucho más/menos que otro"
+
+mode: single
+
+triggers:
+
+- trigger: numeric_state
+
+entity_id: sensor.riego_zona_1_desbalance
+
+above: input_number.riego_umbral_desbalance_circuito
+
+for:
+
+hours: 2
+
+actions:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "⚖️ Zona 1 — Desbalance entre goteros"
+
+mensaje: >-
+
+Diferencia de {{ states('sensor.riego_zona_1_desbalance') }}% entre cultivos
+
+del mismo circuito (válvula huerto).
+
+Más seco: {{ state_attr('sensor.riego_zona_1_desbalance', 'mas_seco') }}.
+
+Más húmedo: {{ state_attr('sensor.riego_zona_1_desbalance', 'mas_humedo') }}.
+
+Abre gotero del seco y/o cierra el del húmedo. No toques la válvula general.
+
+
+# ---------------------------------------------------------------------------
+
+# Desfase grave en cualquier cultivo (fuera del ciclo de riego)
+
+# ---------------------------------------------------------------------------
+
+- id: alerta_desfase_grave_cultivos
+
+alias: "Alerta desfase grave humedad por cultivo"
+
+description: "Aviso inmediato si un cultivo queda muy lejos de su objetivo"
+
+mode: single
+
+triggers:
+
+- trigger: template
+
+value_template: >-
+
+{{ not is_state('sensor.jardin_1_cherry_humedad', 'unavailable')
+
+and not is_state('sensor.jardin_1_cherry_humedad', 'unknown')
+
+and states('sensor.jardin_1_cherry_humedad') | float(0)
+
+< (states('input_number.riego_objetivo_cherry') | float(35)
+
+- states('input_number.riego_umbral_desfase_grave') | float(15)) }}
+
+for:
+
+hours: 3
+
+- trigger: template
+
+value_template: >-
+
+{{ not is_state('sensor.jardin_2_motto_humedad', 'unavailable')
+
+and not is_state('sensor.jardin_2_motto_humedad', 'unknown')
+
+and states('sensor.jardin_2_motto_humedad') | float(0)
+
+< (states('input_number.riego_objetivo_motto') | float(42)
+
+- states('input_number.riego_umbral_desfase_grave') | float(15)) }}
+
+for:
+
+hours: 3
+
+- trigger: template
+
+value_template: >-
+
+{{ not is_state('sensor.jardin_4_escu_humedad', 'unavailable')
+
+and not is_state('sensor.jardin_4_escu_humedad', 'unknown')
+
+and states('sensor.jardin_4_escu_humedad') | float(0)
+
+< (states('input_number.riego_objetivo_escu') | float(32)
+
+- states('input_number.riego_umbral_desfase_grave') | float(15)) }}
+
+for:
+
+hours: 3
+
+- trigger: template
+
+value_template: >-
+
+{{ not is_state('sensor.jardin_3_tex_humedad', 'unavailable')
+
+and not is_state('sensor.jardin_3_tex_humedad', 'unknown')
+
+and states('sensor.jardin_3_tex_humedad') | float(0)
+
+< (states('input_number.riego_objetivo_tex') | float(35)
+
+- states('input_number.riego_umbral_desfase_grave') | float(15)) }}
+
+for:
+
+hours: 3
+
+actions:
+
+- variables:
+
+alertas: >-
+
+{% set ns = namespace(msg=[]) %}
+
+{% set grave = states('input_number.riego_umbral_desfase_grave') | float(15) %}
+
+{% set pares = [
+
+('Cherry', 'sensor.jardin_1_cherry_humedad', 'input_number.riego_objetivo_cherry', 'Zona 1'),
+
+('Pepinos', 'sensor.jardin_2_motto_humedad', 'input_number.riego_objetivo_motto', 'Zona 1'),
+
+('Calabazas', 'sensor.jardin_4_escu_humedad', 'input_number.riego_objetivo_escu', 'Zona 1'),
+
+('Tomates Pera', 'sensor.jardin_3_tex_humedad', 'input_number.riego_objetivo_tex', 'Zona 2')
+
+] %}
+
+{% for nombre, sensor, objetivo, zona in pares %}
+
+{% set act = states(sensor) | float(0) %}
+
+{% set obj = states(objetivo) | float(0) %}
+
+{% set desfase = obj - act %}
+
+{% if desfase >= grave %}
+
+{% set ns.msg = ns.msg + [nombre ~ ' (' ~ act | round(0) ~ '%, obj ' ~ obj | round(0) ~ '%, ' ~ zona ~ ')'] %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ ns.msg }}
+
+- choose:
+
+- conditions:
+
+- condition: template
+
+value_template: "{{ alertas | length > 0 }}"
+
+sequence:
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "🚨 Sequedad grave — ajustar gotero"
+
+mensaje: >-
+
+Desfase grande respecto al objetivo del cultivo:
+
+{{ alertas | join(' | ') }}.
+
+Regula el gotero de ese cultivo (la válvula es compartida).
+
+
+# ---------------------------------------------------------------------------
+
+# Alerta de nutrientes (conductividad)
+
+# ---------------------------------------------------------------------------
+
+- id: alerta_nutrientes_conductividad
+
+alias: "Alerta Nutrientes - Conductividad"
+
+description: "Aviso cuando la conductividad baja de 300 µS/cm en cualquier Mi Flora"
+
+mode: single
+
+triggers:
+
+- trigger: numeric_state
+
+entity_id:
+
+- sensor.jardin_1_cherry_conductividad
+
+- sensor.jardin_2_motto_conductividad
+
+- sensor.jardin_3_tex_conductividad
+
+- sensor.jardin_4_escu_conductividad
+
+below: 300
+
+for:
+
+minutes: 30
+
+actions:
+
+- variables:
+
+cultivos_bajos: >-
+
+{% set ns = namespace(msg=[]) %}
+
+{% set pares = [
+
+('Cherry', 'sensor.jardin_1_cherry_conductividad'),
+
+('Pepinos', 'sensor.jardin_2_motto_conductividad'),
+
+('Tomates Pera', 'sensor.jardin_3_tex_conductividad'),
+
+('Calabazas', 'sensor.jardin_4_escu_conductividad')
+
+] %}
+
+{% for nombre, sensor in pares %}
+
+{% if states(sensor) | float(9999) < 300 %}
+
+{% set ns.msg = ns.msg + [nombre ~ ' (' ~ states(sensor) | round(0) ~ ' µS/cm)'] %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ ns.msg }}
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "🌱 Huerto — Toca abonar"
+
+mensaje: >-
+
+Conductividad baja en: {{ cultivos_bajos | join(', ') }}.
+
+Repón nutrientes en esos cultivos.
+
+
+# ---------------------------------------------------------------------------
+
+# Alerta batería baja Mi Flora
+
+# ---------------------------------------------------------------------------
+
+- id: alerta_bateria_mi_flora
+
+alias: "Alerta Batería baja Mi Flora"
+
+description: "Avisa si la batería de un sensor Mi Flora baja del 15%"
+
+mode: single
+
+triggers:
+
+- trigger: numeric_state
+
+entity_id:
+
+- sensor.jardin_1_cherry_bateria
+
+- sensor.jardin_2_motto_bateria
+
+- sensor.jardin_3_tex_bateria
+
+- sensor.jardin_4_escu_bateria
+
+below: 15
+
+for:
+
+hours: 1
+
+actions:
+
+- variables:
+
+sensores_bajos: >-
+
+{% set ns = namespace(msg=[]) %}
+
+{% set pares = [
+
+('Cherry', 'sensor.jardin_1_cherry_bateria'),
+
+('Pepinos', 'sensor.jardin_2_motto_bateria'),
+
+('Tomates Pera', 'sensor.jardin_3_tex_bateria'),
+
+('Calabazas', 'sensor.jardin_4_escu_bateria')
+
+] %}
+
+{% for nombre, sensor in pares %}
+
+{% if states(sensor) | float(100) < 15 %}
+
+{% set ns.msg = ns.msg + [nombre ~ ' (' ~ states(sensor) | round(0) ~ '%)'] %}
+
+{% endif %}
+
+{% endfor %}
+
+{{ ns.msg }}
+
+- action: script.notificar_riego
+
+data:
+
+titulo: "🔋 Mi Flora — Cambiar batería"
+
+mensaje: >-
+
+Batería baja en: {{ sensores_bajos | join(', ') }}.
+
+Sustituye la pila del sensor para no perder lecturas de riego. 
