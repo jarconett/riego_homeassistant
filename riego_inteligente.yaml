@@ -814,10 +814,11 @@ script:
             options:
               - '1'
               - '2'
-            decision: null
-            required: true
-            detalle: null
-            default: ''
+      decision:
+        required: true
+        default: ''
+      detalle:
+        default: ''
     sequence:
       - variables:
           min_am: "{{ states('sensor.riego_minutos_hasta_amanecer') }}"
