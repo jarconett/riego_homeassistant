@@ -814,10 +814,11 @@ script:
             options:
               - '1'
               - '2'
-            decision: null
-            required: true
-            detalle: null
-            default: ''
+      decision:
+        required: true
+        default: ''
+      detalle:
+        default: ''
     sequence:
       - variables:
           min_am: "{{ states('sensor.riego_minutos_hasta_amanecer') }}"
@@ -882,28 +883,28 @@ script:
                           mensaje: "{{ nuevo | int }} ciclos sin subir humedad ≥3 pts en {{ cultivo }}\
                             \ (última mejora: {{ mejora | round(1) }} pts). Más seco circuito: {{ state_attr('sensor.riego_zona_1_desbalance',\
                             \ 'mas_seco') }}. Revisa gotero u obstrucción; equilibra cultivos del circuito."
-                default:
-                  - variables:
-                      mejora: "{{ states('sensor.jardin_3_tex_humedad') | float(0) - states('input_number.riego_zona2_humedad_inicio')\
-                        \ | float(0) }}"
-                      nuevo: "{% set c = states('input_number.riego_zona2_ciclos_sin_progreso') | int(0)\
-                        \ %} {{ c + 1 if mejora | float < 3 else 0 }}"
-                  - action: input_number.set_value
-                    target:
-                      entity_id: input_number.riego_zona2_ciclos_sin_progreso
+        default:
+          - variables:
+              mejora: "{{ states('sensor.jardin_3_tex_humedad') | float(0) - states('input_number.riego_zona2_humedad_inicio')\
+                \ | float(0) }}"
+              nuevo: "{% set c = states('input_number.riego_zona2_ciclos_sin_progreso') | int(0)\
+                \ %} {{ c + 1 if mejora | float < 3 else 0 }}"
+          - action: input_number.set_value
+            target:
+              entity_id: input_number.riego_zona2_ciclos_sin_progreso
+            data:
+              value: "{{ nuevo }}"
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ mejora | float < 3 and nuevo | int >= 3 }}"
+                sequence:
+                  - action: script.notificar_riego
                     data:
-                      value: "{{ nuevo }}"
-                  - choose:
-                      - conditions:
-                          - condition: template
-                            value_template: "{{ mejora | float < 3 and nuevo | int >= 3 }}"
-                        sequence:
-                          - action: script.notificar_riego
-                            data:
-                              titulo: ⚠️ Zona 2 — Gotero posiblemente bloqueado
-                              mensaje: "{{ nuevo | int }} ciclos sin subir humedad ≥3 pts (última mejora:\
-                                \ {{ mejora | round(1) }} pts). Revisa gotero de tomates pera y rosales\
-                                \ del circuito."
+                      titulo: ⚠️ Zona 2 — Gotero posiblemente bloqueado
+                      mensaje: "{{ nuevo | int }} ciclos sin subir humedad ≥3 pts (última mejora:\
+                        \ {{ mejora | round(1) }} pts). Revisa gotero de tomates pera y rosales\
+                        \ del circuito."
   riego_etapa_zona1:
     alias: Actualizar etapa visual Zona 1
     mode: queued
@@ -2369,13 +2370,13 @@ script:
                             - action: script.riego_etapa_zona2
                               data:
                                 etapa: En espera
-                            - action: logbook.log
-                              data:
-                                name: Riego inteligente
-                                message: "Z{{ repeat.item.zona }} recuperada — etapa «{{ etapa }}» con\
-                                  \ ciclo {{ 'on' if ciclo_on else 'off' }}; válvula cerrada y etapa En\
-                                  \ espera."
-                                entity_id: "{{ repeat.item.etapa_entity }}"
+                    - action: logbook.log
+                      data:
+                        name: Riego inteligente
+                        message: "Z{{ repeat.item.zona }} recuperada — etapa «{{ etapa }}» con\
+                          \ ciclo {{ 'on' if ciclo_on else 'off' }}; válvula cerrada y etapa En\
+                          \ espera."
+                        entity_id: "{{ repeat.item.etapa_entity }}"
   riego_test_logica:
     alias: Test lógica riego (diagnóstico sin válvulas)
     description: Resume umbrales y decisión actual de cada zona sin modificar contadores
