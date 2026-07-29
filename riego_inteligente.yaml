@@ -2442,7 +2442,7 @@ script:
       - action: script.notificar_riego
         data:
           titulo: "💧 Zona 1 — Riego refuerzo jardineras/arriate"
-          mensaje: "Arranca pulso fijo de {{ mins | int }} min ({% if now().hour < 12 %}07:00{% else %}19:00{% endif %}{% if sim %}, simulación {{ d_seg | int }} s{% endif %}). Sin evaluar desbalance. Cherry {{ states('sensor.jardin_1_cherry_humedad') }}%, Motto {{ states('sensor.jardin_1_motto_humedad') }}%, Escu {{ states('sensor.jardin_1_escu_humedad') }}%."
+          mensaje: "Arranca pulso fijo de {{ mins | int }} min ({% if now().hour < 12 %}07:00{% else %}19:00{% endif %}{% if sim %}, simulación {{ d_seg | int }} s{% endif %}). Sin evaluar desbalance. Cherry {{ states('sensor.jardin_1_cherry_humedad') }}%, Pepinos {{ states('sensor.jardin_2_motto_humedad') }}%, Calabazas {{ states('sensor.jardin_4_escu_humedad') }}%."
       - delay:
           seconds: "{{ d_seg | int }}"
       - choose:
