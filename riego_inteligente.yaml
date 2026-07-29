@@ -296,6 +296,22 @@ input_number:
     unit_of_measurement: min
     icon: "mdi:timer"
     initial: 2
+  riego_zona1_refuerzo_hora_manana:
+    name: Hora refuerzo mañana Z1
+    min: 5
+    max: 11
+    step: 1
+    unit_of_measurement: h
+    icon: "mdi:weather-sunset-up"
+    initial: 7
+  riego_zona1_refuerzo_hora_tarde:
+    name: Hora refuerzo tarde Z1
+    min: 15
+    max: 22
+    step: 1
+    unit_of_measurement: h
+    icon: "mdi:weather-sunset-down"
+    initial: 19
 input_boolean:
   riego_activo:
     name: Riego automático activo
@@ -2442,7 +2458,7 @@ script:
       - action: script.notificar_riego
         data:
           titulo: "💧 Zona 1 — Riego refuerzo jardineras/arriate"
-          mensaje: "Arranca pulso fijo de {{ mins | int }} min ({% if now().hour < 12 %}07:00{% else %}19:00{% endif %}{% if sim %}, simulación {{ d_seg | int }} s{% endif %}). Sin evaluar desbalance. Cherry {{ states('sensor.jardin_1_cherry_humedad') }}%, Pepinos {{ states('sensor.jardin_2_motto_humedad') }}%, Calabazas {{ states('sensor.jardin_4_escu_humedad') }}%."
+          mensaje: "Arranca pulso fijo de {{ mins | int }} min a las {{ now().strftime('%H:%M') }}{% if sim %} (simulación {{ d_seg | int }} s){% endif %}. Sin evaluar desbalance. Cherry {{ states('sensor.jardin_1_cherry_humedad') }}%, Pepinos {{ states('sensor.jardin_2_motto_humedad') }}%, Calabazas {{ states('sensor.jardin_4_escu_humedad') }}%."
       - delay:
           seconds: "{{ d_seg | int }}"
       - choose:
@@ -2466,7 +2482,7 @@ script:
         data:
           zona: '1'
           decision: riego_refuerzo
-          detalle: "{{ mins | int }} min fijos 07:00/19:00 (sin desbalance)"
+          detalle: "{{ mins | int }} min a las {{ states('input_number.riego_zona1_refuerzo_hora_manana') | int(7) }}:00/{{ states('input_number.riego_zona1_refuerzo_hora_tarde') | int(19) }}:00 (sin desbalance)"
       - action: script.riego_etapa_zona1
         data:
           etapa: Completado
@@ -2475,14 +2491,16 @@ script:
           entity_id: input_boolean.riego_zona1_ciclo_en_curso
 automation:
   - id: riego_zona1_programado_manana
-    alias: "Riego refuerzo Zona 1 — 07:00 (2 min)"
-    description: "Refuerzo fijo en arriate/jardineras a las 07:00. No evalúa desbalance. Complementa el\
-      \ orquestador nocturno."
+    alias: Riego refuerzo Zona 1 — mañana
+    description: "Refuerzo en arriate/jardineras a la hora configurada (input_number.riego_zona1_refuerzo_hora_manana).\
+      \ Duración: riego_zona1_pulso_programado_min. No evalúa desbalance. Complementa el orquestador nocturno."
     mode: single
     triggers:
-      - trigger: time
-        at: "07:00:00"
+      - trigger: time_pattern
+        minutes: "0"
     conditions:
+      - condition: template
+        value_template: "{{ now().hour == states('input_number.riego_zona1_refuerzo_hora_manana') | int(7) }}"
       - condition: state
         entity_id: input_boolean.riego_activo
         state: "on"
@@ -2503,14 +2521,16 @@ automation:
     actions:
       - action: script.riego_programado_zona1
   - id: riego_zona1_programado_tarde
-    alias: "Riego refuerzo Zona 1 — 19:00 (2 min)"
-    description: "Refuerzo fijo en arriate/jardineras a las 19:00. No evalúa desbalance. Complementa el\
-      \ orquestador nocturno."
+    alias: Riego refuerzo Zona 1 — tarde
+    description: "Refuerzo en arriate/jardineras a la hora configurada (input_number.riego_zona1_refuerzo_hora_tarde).\
+      \ Duración: riego_zona1_pulso_programado_min. No evalúa desbalance. Complementa el orquestador nocturno."
     mode: single
     triggers:
-      - trigger: time
-        at: "19:00:00"
+      - trigger: time_pattern
+        minutes: "0"
     conditions:
+      - condition: template
+        value_template: "{{ now().hour == states('input_number.riego_zona1_refuerzo_hora_tarde') | int(19) }}"
       - condition: state
         entity_id: input_boolean.riego_activo
         state: "on"
