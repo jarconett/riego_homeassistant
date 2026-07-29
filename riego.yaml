@@ -492,4 +492,241 @@ views:
         content: >
           {% set h = states('input_text.riego_historial_alertas') %}
           {% set h2 = states('input_text.riego_historial_alertas_b') %}
+text.riego_historial_alertas_b') %}
+          {% if h in ['', 'unknown', 'unavailable'] and h2 in ['', 'unknown', 'unavailable'] %}
+          Sin alertas registradas aún.
+          {% else %}
+          {{ (h ~ '\n\n' ~ h2) | replace('\\n', '\n\n') }}
+          {% endif %}
+
+      - type: markdown
+        title: Estado actual por cultivo
+        content: >
+          {% set cultivos = [
+            ('Cherry', 'sensor.riego_cherry_desfase'),
+            ('Pepinos', 'sensor.riego_motto_desfase'),
+            ('Calabazas', 'sensor.riego_escu_desfase'),
+            ('Tomates Pera', 'sensor.riego_tex_desfase')
+          ] %}
+          {% for nombre, sensor in cultivos %}
+          {% set nivel = state_attr(sensor, 'nivel') %}
+          {% set icon = '⚪' if nivel == 'desconocido' else ('🔴' if nivel == 'grave' else ('🟠' if nivel == 'moderado' else ('🟡' if nivel == 'leve' else '🟢'))) %}
+          {{ icon }} **{{ nombre }}**: desfase {{ states(sensor) }} pts ({{ nivel }})
+          {% endfor %}
+
+      - type: logbook
+        title: Registro de automatizaciones
+        hours_to_show: 168
+        entities:
+          - automation.riego_orquestador_nocturno
+          - automation.riego_reset_contadores_post_noche
+          - automation.riego_aviso_valvula_manual_en_noche
+          - automation.riego_aviso_bluetooth_sensores_caidos
+          - automation.alerta_configuracion_riego_incoherente
+          - automation.alerta_desbalance_goteros_zona_1
+          - automation.alerta_desfase_grave_humedad_por_cultivo
+          - automation.alerta_nutrientes_conductividad
+          - automation.alerta_bateria_baja_mi_flora
+
+      - type: entities
+        title: Batería Mi Flora
+        entities:
+          - sensor.jardin_1_cherry_bateria
+          - sensor.jardin_2_motto_bateria
+          - sensor.jardin_3_tex_bateria
+          - sensor.jardin_4_escu_bateria
+
+      - type: entities
+        title: Automatizaciones (activar/desactivar)
+        entities:
+          - automation.riego_orquestador_nocturno
+          - automation.riego_cerrar_valvulas_al_arrancar
+          - automation.riego_reset_diario
+          - automation.riego_reset_contadores_post_noche
+          - automation.riego_aviso_valvula_manual_en_noche
+          - automation.riego_aviso_bluetooth_sensores_caidos
+          - automation.alerta_configuracion_riego_incoherente
+          - automation.alerta_desbalance_goteros_zona_1
+          - automation.alerta_desfase_grave_humedad_por_cultivo
+          - automation.alerta_nutrientes_conductividad
+          - automation.alerta_bateria_baja_mi_flora
+
+      - type: markdown
+        title: Última ejecución
+        content: >
+          «Nunca» en Ajustes solo indica que **aún no se cumplieron** las condiciones del disparador.
+          **Reset diario** (amanecer) y **Seguridad al arrancar** (reinicio HA) son las que más suelen ejecutarse.
+          El **orquestador nocturno** solo corre al atardecer +15 min si: riego activo, clima OK,
+          `sensor.riego_configuracion_ok` = ok, ninguna zona hecha hoy y orquestador no en curso.
+
+  # ===========================================================================
+  # VISTA 5 — Calibración de goteros (guía de partida)
+  # ===========================================================================
+  - title: Goteros
+    path: goteros
+    icon: mdi:water-pump
+    cards:
+      - type: markdown
+        content: |
+          ## 💧 Calibración de goteros
+          Guía de partida para goteros regulables **rueda 0–60** (escala habitual **0–6,0 L/h**;
+          cada marca ≈ **0,1 L/h**). Estrategia: **caudales bajos + varios ciclos** hasta humedad OK.
+
+      - type: markdown
+        title: Información de partida
+        content: |
+          ### Cómo funciona el riego
+          - **2 válvulas**, varios cultivos por circuito → el caudal se regula **solo en cada gotero**.
+          - Pulsos cortos: **10 min** (+ refuerzo 5–8 min si sigue seco).
+          - **Ciclos alternados** Z1 ↔ Z2 cada ~35 min; hasta **8 ciclos** por noche.
+          - La zona se cierra tras **2 lecturas OK** seguidas (sensor tarda en estabilizarse).
+
+          ### Fórmula — agua por pulso de 10 min
+          `Litros = Caudal (L/h) × 10 ÷ 60 = Caudal ÷ 6`
+
+          | Caudal | Marca rueda | L en 10 min | L ciclo máx. Z1* |
+          |--------|-------------|-------------|------------------|
+          | 1,5 L/h | 15 | 0,25 L | ~0,70 L |
+          | 2,0 L/h | 20 | 0,33 L | ~0,93 L |
+          | 2,5 L/h | 25 | 0,42 L | ~1,17 L |
+          | 3,0 L/h | 30 | 0,50 L | ~1,40 L |
+          | 3,5 L/h | 35 | 0,58 L | ~1,63 L |
+          | 4,0 L/h | 40 | 0,67 L | ~1,87 L |
+
+          \* Zona 1: hasta 10 + 8 min si sigue seco (18 min máx. por ciclo).
+
+          **Objetivo por pulso:** subir humedad **~4–8 puntos** en el Mi Flora.
+          Si sube **&lt; 4 pts** → gotero muy cerrado. Si **&gt; 12 pts** → demasiado abierto.
+
+          > Si en la prueba de 10 min sale el **doble** del rango esperado, tu escala puede ser 0–60 L/h real
+          > (poco habitual en macetas) → usa **~1/10** del giro indicado.
+
+      - type: markdown
+        title: Configuración inicial por cultivo
+        content: |
+          | Cultivo | Soporte | Obj. HA | Caudal | Marca | Giro desde cerrado* |
+          |---------|---------|---------|--------|-------|---------------------|
+          | **Cherry** | Jardineras | 35 % | 1,8–2,2 L/h | **18–22** | ~**1/3** vuelta |
+          | **Pepinos** | Arriate | 42 % | 3,0–3,5 L/h | **30–35** | ~**1/2** vuelta |
+          | **Calabazas** | Arriate | 32 % | 2,5–3,0 L/h | **25–30** | ~**2/5** vuelta |
+          | **Tomates Pera** | Cajón madera | 35 % | 2,8–3,2 L/h | **28–32** | ~**1/2** vuelta |
+          | **Rosales** | Zona 2 (sin sensor) | — | 2,0–2,5 L/h | **20–25** | ~**1/3** vuelta |
+
+          \* 1 vuelta completa = escala 0→60. Si tu gotero necesita 2 vueltas para abrir del todo, divide entre 2.
+
+          **Pepinos &gt; Calabazas** en la rueda porque el objetivo de humedad es mayor (42 % vs 32 %),
+          aunque compartan válvula en Zona 1.
+
+      - type: markdown
+        title: Prueba de calibración (10 min)
+        content: |
+          Antes del primer riego automático, **por cada gotero**:
+
+          1. Cierra la rueda del todo (**0**).
+          2. Abre hasta la **marca de partida** (tabla siguiente).
+          3. Abre la válvula **solo 10 min** con vaso graduado bajo el gotero.
+          4. Comprueba mililitros medidos:
+
+          | Cultivo | Marca partida | Rango esperado (10 min) |
+          |---------|---------------|-------------------------|
+          | Cherry | **20** | 280–380 ml |
+          | Pepinos | **32** | 480–580 ml |
+          | Calabazas | **28** | 400–500 ml |
+          | Tomates Pera | **30** | 450–530 ml |
+          | Rosales | **22** | 320–420 ml |
+
+          Ajusta la rueda hasta entrar en el rango antes de confiar en el riego nocturno.
+
+      - type: markdown
+        title: Ajuste — primeras 2 semanas
+        content: |
+          El sistema te avisará por notificación. Usa esta tabla como referencia rápida:
+
+          | Señal del sistema | Acción en la rueda |
+          |-------------------|-------------------|
+          | Subida **&lt; 4 pts** tras regar | Abrir **~1/4 vuelta** o revisar obstrucción |
+          | Desfase **≥ 8 pts** (moderado) | Abrir **~1/4 vuelta** |
+          | Desfase **≥ 15 pts** (grave) | Abrir **~1/2 vuelta** |
+          | **&gt; 12 pts** por encima del objetivo | Cerrar **~1/4 vuelta** (encharque) |
+          | Desbalance Z1 **&gt; 18 %** entre cultivos | Subir gotero del **más seco**, bajar del **más húmedo** |
+
+          **Umbrales del sistema** (pestaña Cultivos): confirmación **5 pts**, riego completo **15 pts**, pulso suave entre ambos (5 min).
+
+          | Desfase | Acción |
+          |---------|--------|
+          | ≤ 5 pts | Confirmación de humedad |
+          | 6–14 pts | **Pulso suave** (poca agua) |
+          | ≥ 15 pts | Riego completo (pulsos largos) |
+
+          **Reglas de oro**
+          - No alargues el tiempo de válvula para un solo cultivo → ajusta **su gotero**.
+          - Tras **2 ciclos**, si un cultivo sigue seco y otro ya está bien en el mismo circuito,
+            abre **solo** el gotero del seco.
+          - Si un cultivo siempre queda seco tras varios días, sube su `objetivo` 2–3 pts en la pestaña **Cultivos**.
+          - Clava el Mi Flora cerca de raíces; el goteo no debe caer sobre la cabeza del sensor.
+
+      - type: markdown
+        title: Resumen práctico
+        content: |
+          | Cultivo | Zona | Marca inicial | Giro aprox. |
+          |---------|------|---------------|-------------|
+          | Cherry | 1 | **20** | 1/3 |
+          | Pepinos | 1 | **32** | 1/2 |
+          | Calabazas | 1 | **28** | 2/5 |
+          | Tomates Pera | 2 | **30** | 1/2 |
+          | Rosales | 2 | **22** | 1/3 |
+
+          El orquestador repetirá ciclos hasta confirmar humedad; **no hace falta** llegar al objetivo en un solo ciclo.
+
+      - type: markdown
+        title: Estado actual (para calibrar)
+        content: >
+          {% set cultivos = [
+            ('Cherry', 'sensor.riego_cherry_desfase', 'sensor.jardin_1_cherry_humedad', 'input_number.riego_objetivo_cherry', '20'),
+            ('Pepinos', 'sensor.riego_motto_desfase', 'sensor.jardin_2_motto_humedad', 'input_number.riego_objetivo_motto', '32'),
+            ('Calabazas', 'sensor.riego_escu_desfase', 'sensor.jardin_4_escu_humedad', 'input_number.riego_objetivo_escu', '28'),
+            ('Tomates Pera', 'sensor.riego_tex_desfase', 'sensor.jardin_3_tex_humedad', 'input_number.riego_objetivo_tex', '30')
+          ] %}
+          {% for nombre, desfase, humedad, objetivo, marca in cultivos %}
+          {% set nivel = state_attr(desfase, 'nivel') %}
+          {% set icon = '⚪' if nivel == 'desconocido' else ('🔴' if nivel == 'grave' else ('🟠' if nivel == 'moderado' else ('🟡' if nivel == 'leve' else '🟢'))) %}
+          {{ icon }} **{{ nombre }}** — {{ states(humedad) }}% (obj. {{ states(objetivo) }}%, desfase {{ states(desfase) }} pts) · marca partida **{{ marca }}**
+          {% endfor %}
+
+          🌹 **Rosales** — sin sensor; marca partida **22**, revisar a ojo cuando avise Zona 2.
+
+      - type: markdown
+        title: Bloqueo encharque / EC baja
+        content: >
+          {% if is_state('sensor.riego_zona_1_bloqueo_ec', 'si') %}
+          🧪 **Zona 1 — riego bloqueado:** {{ state_attr('sensor.riego_zona_1_bloqueo_ec', 'cultivos') }}
+          {% else %}
+          ✅ Zona 1 — sin bloqueo EC.
+          {% endif %}
+          {% if is_state('sensor.riego_zona_2_bloqueo_ec', 'si') %}
+          🧪 **Zona 2 — riego bloqueado:** {{ state_attr('sensor.riego_zona_2_bloqueo_ec', 'cultivos') }}
+          {% else %}
+          ✅ Zona 2 — sin bloqueo EC.
+          {% endif %}
+          Umbral EC: {{ states('input_number.riego_umbral_ec_encharque') }} µS/cm · encharque = humedad &gt; objetivo + {{ states('input_number.riego_umbral_confirmacion') | int }} pts.
+
+      - type: markdown
+        title: Progreso de calibración
+        content: >
+          {% set sp1 = states('input_number.riego_zona1_ciclos_sin_progreso') | int(0) %}
+          {% set sp2 = states('input_number.riego_zona2_ciclos_sin_progreso') | int(0) %}
+          {% set ca1 = 'on' if is_state('input_boolean.riego_alerta_caudal_z1_enviada', 'on') else 'off' %}
+          {% set ca2 = 'on' if is_state('input_boolean.riego_alerta_caudal_z2_enviada', 'on') else 'off' %}
+          **Zona 1** — ciclos sin subir humedad: **{{ sp1 }}**/3
+          {{ '⚠️ revisar gotero' if sp1 >= 2 else '✅ OK' }} · alerta caudal hoy: {{ ca1 }}.
+          **Zona 2** — ciclos sin progreso: **{{ sp2 }}**/3
+          {{ '⚠️ revisar gotero' if sp2 >= 2 else '✅ OK' }} · alerta caudal hoy: {{ ca2 }}.
+          Objetivo: subir **≥4 pts** tras cada pulso; el sistema avisa si **&lt;3 pts** tras regar.
+
+      - type: entities
+        title: Umbrales de alerta (ajustables)
+        entities:
+          - input_number.riego_umbral_desfase_moderado
+          - input_number.riego_umbral_desfase_grave
+          - input_number.
   
