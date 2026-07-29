@@ -11,7 +11,7 @@
 #
 # Zona 1 (arriate / jardineras / huerto):
 #   - Orquestador nocturno: riega si hace falta (como Zona 2).
-#   - Refuerzo fijo: 2 min a las 07:00 y 19:00 (sin evaluar desbalance entre sensores).
+#   - Refuerzo programable: minutos y horas mañana/tarde (sliders; por defecto 2 min a las 07:00 y 19:00; sin desbalance).
 # Zona 2 (rosales / tomates pera): orquestador nocturno al anochecer.
 
 group:
