@@ -515,7 +515,6 @@ views:
         content: >
           {% set h = states('input_text.riego_historial_alertas') %}
           {% set h2 = states('input_text.riego_historial_alertas_b') %}
-text.riego_historial_alertas_b') %}
           {% if h in ['', 'unknown', 'unavailable'] and h2 in ['', 'unknown', 'unavailable'] %}
           Sin alertas registradas aún.
           {% else %}
