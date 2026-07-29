@@ -1,1 +1,495 @@
-test
+title: Riego Inteligente
+views:
+  # ===========================================================================
+  # VISTA 1 — Panel general: etapas, válvulas y clima
+  # ===========================================================================
+  - title: General
+    path: general
+    icon: mdi:watering-can
+    cards:
+      - type: markdown
+        content: |
+          ## 🌿 Riego inteligente — 2 circuitos
+          Monitor en tiempo real de etapas, válvulas y condiciones climáticas.
+
+      - type: markdown
+        title: Reintentos nocturnos (ola de calor)
+        content: |
+          **Ciclos alternados** Zona 1 ↔ Zona 2 cada ~35 min (ajustable).
+          Al **inicio de cada ciclo** se lee la humedad:
+          - Si está seca → riega y reinicia confirmaciones.
+          - Si está bien → suma 1 confirmación.
+          - Tras **2 lecturas OK** seguidas (ajustable) → marca zona hecha hoy.
+          - Confirmación exige humedad a **≤ 5 pts** del objetivo (no confundir con umbral de riego: 15 pts).
+          Ciclos 6–8 = ventana fallback ola de calor.
+
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: input_select.riego_zona1_etapa
+            name: Zona 1 — etapa
+            icon: mdi:sprout
+          - type: markdown
+            content: >
+              **Zona 1 — próximo paso**
+              {% set id = 'sensor.riego_zona_1_decision_prevista' %}
+              {% if states(id) in ['unknown', 'unavailable'] %}
+              {% set id = 'sensor.riego_zona1_decision_prevista' %}
+              {% endif %}
+              {{ states(id) }}
+
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: input_select.riego_zona2_etapa
+            name: Zona 2 — etapa
+            icon: mdi:flower
+          - type: markdown
+            content: >
+              **Zona 2 — próximo paso**
+              {% set id = 'sensor.riego_zona_2_decision_prevista' %}
+              {% if states(id) in ['unknown', 'unavailable'] %}
+              {% set id = 'sensor.riego_zona2_decision_prevista' %}
+              {% endif %}
+              {{ states(id) }}
+
+      - type: markdown
+        title: Progreso Zona 1
+        content: >
+          **Próximo ciclo:** {% set dp = 'sensor.riego_zona_1_decision_prevista' %}{% if states(dp) in ['unknown', 'unavailable'] %}{% set dp = 'sensor.riego_zona1_decision_prevista' %}{% endif %}{{ states(dp) }}
+          (foco {{ state_attr(dp, 'cultivo_foco') }},
+          {{ state_attr(dp, 'humedades') }},
+          amanecer {{ state_attr(dp, 'margen_amanecer') }})
+          {% set e = states('input_select.riego_zona1_etapa') %}
+          {% set pasos = [
+            'Iniciando',
+            'Pulso 1 — regando',
+            'Pausa absorción',
+            'Pulso 2 — refuerzo',
+            'Lectura final',
+            'Completado'
+          ] %}
+          **Detalle:** {% set ed = 'sensor.riego_zona_1_etapa_detalle' %}{% if states(ed) in ['unknown', 'unavailable'] %}{% set ed = 'sensor.riego_zona1_etapa_detalle' %}{% endif %}{% if states(ed) in ['unknown', 'unavailable'] %}{{ states('input_select.riego_zona1_etapa') }}{% else %}{{ states(ed) }}{% endif %}
+          {% for p in pasos %}
+          {{ '✅' if e == p else ('⏳' if e == 'En espera' and loop.first else '⬜') }} {{ p }}
+          {% endfor %}
+          {% if e == 'Pulso suave — regando' %}
+          💧 **Pulso suave** — humedad intermedia ({{ states('input_number.riego_pulso_suave_min') | int }} min).
+          {% endif %}
+          {% if e == 'Confirmando humedad' %}
+          💧 **Humedad OK** — esperando otra lectura al inicio del próximo ciclo para cerrar la zona.
+          {% endif %}
+          {% if e == 'En espera — sensor no disponible' %}
+          📡 **Sensor Mi Flora no disponible** — reintento cuando vuelva Bluetooth.
+          {% endif %}
+          {% if e == 'En espera — suelo caliente' %}
+          🌡️ **Suelo caliente** — esperando a que baje de 28 °C o al fallback de las 4 h.
+          {% endif %}
+          {% if e == 'En espera — encharque / EC baja' %}
+          🧪 **Encharque + EC baja** — no se riega (suelo húmedo con pocos nutrientes).
+          {% endif %}
+          {% if e == 'Ola de calor — riego nocturno' %}
+          🌡️ **Ola de calor** — suelo caliente pero humedad baja; riego nocturno activado.
+          {% endif %}
+          {% if e == 'No necesario — suelo húmedo' %}
+          ℹ️ **No regó hoy** — humedad suficiente en todos los cultivos.
+          {% endif %}
+
+      - type: markdown
+        title: Progreso Zona 2
+        content: >
+          **Próximo ciclo:** {% set dp = 'sensor.riego_zona_2_decision_prevista' %}{% if states(dp) in ['unknown', 'unavailable'] %}{% set dp = 'sensor.riego_zona2_decision_prevista' %}{% endif %}{{ states(dp) }}
+          (Tex {{ state_attr(dp, 'humedad_tex') }},
+          amanecer {{ state_attr(dp, 'margen_amanecer') }})
+          {% set e = states('input_select.riego_zona2_etapa') %}
+          {% set pasos = [
+            'Iniciando',
+            'Pulso 1 — regando',
+            'Pausa absorción',
+            'Pulso 2 — refuerzo',
+            'Lectura final',
+            'Completado'
+          ] %}
+          **Detalle:** {% set ed = 'sensor.riego_zona_2_etapa_detalle' %}{% if states(ed) in ['unknown', 'unavailable'] %}{% set ed = 'sensor.riego_zona2_etapa_detalle' %}{% endif %}{% if states(ed) in ['unknown', 'unavailable'] %}{{ states('input_select.riego_zona2_etapa') }}{% else %}{{ states(ed) }}{% endif %}
+          {% for p in pasos %}
+          {{ '✅' if e == p else '⬜' }} {{ p }}
+          {% endfor %}
+          {% if e == 'Pulso suave — regando' %}
+          💧 **Pulso suave** — humedad intermedia ({{ states('input_number.riego_pulso_suave_min') | int }} min).
+          {% endif %}
+          {% if e == 'Confirmando humedad' %}
+          💧 **Humedad OK** — esperando otra lectura al inicio del próximo ciclo para cerrar la zona.
+          {% endif %}
+          {% if e == 'En espera — sensor no disponible' %}
+          📡 **Sensor Mi Flora no disponible** — reintento cuando vuelva Bluetooth.
+          {% endif %}
+          {% if e == 'En espera — suelo caliente' %}
+          🌡️ **Suelo caliente** — esperando a que baje de 28 °C o al fallback de las 4 h.
+          {% endif %}
+          {% if e == 'En espera — encharque / EC baja' %}
+          🧪 **Encharque + EC baja** — no se riega (suelo húmedo con pocos nutrientes).
+          {% endif %}
+          {% if e == 'Ola de calor — riego nocturno' %}
+          🌡️ **Ola de calor** — suelo caliente pero humedad baja; riego nocturno activado.
+          {% endif %}
+          {% if e == 'No necesario — suelo húmedo' %}
+          ℹ️ **No regó hoy** — Tex con humedad suficiente.
+          {% endif %}
+
+      - type: glance
+        title: Válvulas y clima
+        show_name: true
+        entities:
+          - entity: switch.valvula_riego_huerto
+            name: Válvula Huerto
+          - entity: switch.valvula_riego_rosales_pera
+            name: Válvula Jardín
+          - entity: sensor.riego_clima_permitido
+            name: Riego permitido
+          - entity: weather.aemet
+            name: Tiempo AEMET
+          - entity: sensor.riego_zona_1_temp_suelo_max
+            name: Temp. suelo Zona 1
+          - entity: sensor.riego_zona_2_temp_suelo
+            name: Temp. suelo Zona 2
+          - entity: sensor.riego_zona_1_sensores_ok
+            name: Sensores OK Zona 1
+          - entity: sensor.riego_zona_2_sensores_ok
+            name: Sensores OK Zona 2
+          - entity: sensor.aemet_rain
+            name: Lluvia prevista
+
+      - type: entities
+        title: Últimas ejecuciones
+        entities:
+          - entity: input_datetime.riego_zona1_ultimo
+            name: Último riego Zona 1
+          - entity: input_datetime.riego_zona2_ultimo
+            name: Último riego Zona 2
+          - entity: input_boolean.riego_zona1_hecho_hoy
+            name: Zona 1 hecha hoy
+          - entity: input_boolean.riego_zona2_hecho_hoy
+            name: Zona 2 hecha hoy
+          - entity: input_boolean.riego_noche_en_curso
+            name: Orquestador nocturno activo
+          - entity: input_boolean.riego_activo
+            name: Riego automático activo
+          - entity: sensor.riego_zona_1_estado
+            name: Estado Zona 1
+          - entity: sensor.riego_zona_2_estado
+            name: Estado Zona 2
+          - entity: sensor.riego_configuracion_ok
+            name: Configuración OK
+          - entity: input_select.riego_turno_ciclo
+            name: Turno ciclo
+          - entity: input_number.riego_zona1_confirmaciones_humedad
+            name: Confirmaciones Z1
+          - entity: input_number.riego_zona2_confirmaciones_humedad
+            name: Confirmaciones Z2
+          - entity: input_select.riego_zona1_etapa
+            name: Etapa Zona 1
+          - entity: input_select.riego_zona2_etapa
+            name: Etapa Zona 2
+          - entity: sensor.riego_zona_1_desbalance
+            name: Desbalance circuito huerto
+          - entity: sensor.riego_minutos_hasta_amanecer
+            name: Minutos hasta amanecer
+          - entity: sensor.riego_zona_1_bloqueo_ec
+            name: Bloqueo EC Z1
+          - entity: sensor.riego_zona_2_bloqueo_ec
+            name: Bloqueo EC Z2
+
+      - type: history-graph
+        title: Minutos hasta amanecer — 24 h
+        hours_to_show: 24
+        refresh_interval: 120
+        entities:
+          - entity: sensor.riego_minutos_hasta_amanecer
+            name: Margen nocturno
+          - entity: input_number.riego_minutos_margen_amanecer
+            name: Umbral margen (ref.)
+
+      - type: history-graph
+        title: Confirmaciones y regados — 48 h
+        hours_to_show: 48
+        refresh_interval: 120
+        entities:
+          - entity: input_number.riego_zona1_confirmaciones_humedad
+            name: Confirmaciones Z1
+          - entity: input_number.riego_zona2_confirmaciones_humedad
+            name: Confirmaciones Z2
+          - entity: input_number.riego_zona2_regados_noche
+            name: Regados Z2 / noche
+          - entity: input_number.riego_zona1_ciclos_sin_progreso
+            name: Sin progreso Z1
+          - entity: input_number.riego_zona2_ciclos_sin_progreso
+            name: Sin progreso Z2
+
+  # ===========================================================================
+  # VISTA 2 — Cultivos: humedad actual vs objetivo
+  # ===========================================================================
+  - title: Cultivos
+    path: cultivos
+    icon: mdi:sprout
+    cards:
+      - type: markdown
+        content: |
+          **Desfase** = objetivo − humedad actual (positivo = necesita más agua).
+          Ajusta goteros según alertas, no la válvula general.
+
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.jardin_1_cherry_humedad
+            name: Cherry
+            min: 0
+            max: 60
+            severity:
+              green: 30
+              yellow: 20
+              red: 0
+          - type: entity
+            entity: sensor.riego_cherry_desfase
+            name: Desfase Cherry
+
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.jardin_2_motto_humedad
+            name: Pepinos
+            min: 0
+            max: 60
+            severity:
+              green: 35
+              yellow: 25
+              red: 0
+          - type: entity
+            entity: sensor.riego_motto_desfase
+            name: Desfase Pepinos
+
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.jardin_4_escu_humedad
+            name: Calabazas
+            min: 0
+            max: 60
+            severity:
+              green: 28
+              yellow: 20
+              red: 0
+          - type: entity
+            entity: sensor.riego_escu_desfase
+            name: Desfase Calabazas
+
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.jardin_3_tex_humedad
+            name: Tomates Pera
+            min: 0
+            max: 60
+            severity:
+              green: 30
+              yellow: 20
+              red: 0
+          - type: entity
+            entity: sensor.riego_tex_desfase
+            name: Desfase Tex
+
+      - type: entities
+        title: Objetivos de humedad (ajustables)
+        entities:
+          - input_number.riego_objetivo_cherry
+          - input_number.riego_objetivo_motto
+          - input_number.riego_objetivo_escu
+          - input_number.riego_objetivo_tex
+          - input_number.riego_umbral_desfase_moderado
+          - input_number.riego_umbral_desfase_grave
+          - input_number.riego_ciclos_para_hecho
+          - input_number.riego_pausa_entre_ciclos
+          - input_number.riego_max_ciclos_noche
+          - input_number.riego_umbral_confirmacion
+          - input_number.riego_umbral_regar
+          - input_number.riego_umbral_pulso2
+          - input_number.riego_umbral_temperatura_suelo
+          - input_number.riego_pulso1_minutos
+          - input_number.riego_pausa_absorcion_min
+          - input_number.riego_pulso2_zona1_min
+          - input_number.riego_pulso2_zona2_min
+          - input_number.riego_pulso_suave_min
+          - input_number.riego_pausa_suave_min
+          - input_number.riego_lectura_final_min
+          - input_number.riego_umbral_desbalance_circuito
+      - type: markdown
+        title: Prueba manual — aviso
+        content: >
+          {% if is_state('input_boolean.riego_noche_en_curso', 'on') %}
+          ⚠️ **Orquestador nocturno activo** — lanzar un ciclo manual puede solaparse con el turno automático y alterar contadores. Preferible esperar o desactivar el orquestador.
+          {% elif is_state('input_boolean.riego_zona1_ciclo_en_curso', 'on') or is_state('input_boolean.riego_zona2_ciclo_en_curso', 'on') %}
+          ⏳ **Hay un ciclo en ejecución** — espera a que termine antes de lanzar otro.
+          {% else %}
+          ✅ Puedes lanzar un ciclo de prueba. Revisa **decisión prevista** en la pestaña General.
+          {% endif %}
+          {% if is_state('input_boolean.riego_modo_simulacion', 'on') %}
+          
+          🧪 **Simulación activa** — tiempos cortos automáticos (sin tocar los sliders):
+          pulso 1, pausa, pulso 2, lectura y pulso suave **1 min → 1 s**;
+          pausa entre ciclos del orquestador **2 min → 2 s**; válvulas cerradas.
+          {% endif %}
+
+      - type: entities
+        title: Prueba manual (un ciclo)
+        entities:
+          - script.riego_ciclo_zona1
+          - script.riego_ciclo_zona2
+          - script.riego_test_logica
+          - script.riego_recuperar_estado
+      - type: markdown
+        title: Orquestador nocturno (prueba)
+        content: >
+          {% if is_state('sun.sun', 'below_horizon') %}
+          🌙 **De noche** — puedes lanzar el orquestador alternado (Z1↔Z2) con el botón de abajo.
+          {% else %}
+          ☀️ **De día** el orquestador no ejecuta ciclos (solo entre atardecer y amanecer).
+          Usa un ciclo suelto Z1/Z2 arriba o espera al atardecer +15 min (automático).
+          {% endif %}
+          Tras reiniciar HA hay que relanzarlo a mano si ya pasó el atardecer.
+      - type: entities
+        title: Lanzar orquestador
+        entities:
+          - script.riego_noche_alternada
+          - input_boolean.riego_noche_en_curso
+          - input_select.riego_turno_ciclo
+      - type: entities
+        title: Control maestro
+        entities:
+          - input_boolean.riego_activo
+          - input_boolean.riego_modo_simulacion
+          - input_boolean.riego_zona1_ciclo_en_curso
+          - input_boolean.riego_zona2_ciclo_en_curso
+          - input_text.riego_zona1_cultivo_seco_inicio
+          - input_boolean.riego_forzar_pese_clima
+          - input_number.riego_zona1_ciclos_sin_progreso
+          - input_number.riego_zona2_ciclos_sin_progreso
+          - input_number.riego_umbral_ec_encharque
+          - input_number.riego_minutos_margen_amanecer
+
+      - type: entities
+        title: Mi Flora — lecturas completas
+        entities:
+          - group.mi_flora_cherry
+          - group.mi_flora_motto
+          - group.mi_flora_escu
+          - group.mi_flora_tex
+
+  # ===========================================================================
+  # VISTA 3 — Histórico de mediciones (7 días)
+  # ===========================================================================
+  - title: Histórico
+    path: historico
+    icon: mdi:chart-line
+    cards:
+      - type: history-graph
+        title: Humedad — 7 días
+        hours_to_show: 168
+        refresh_interval: 300
+        entities:
+          - entity: sensor.jardin_1_cherry_humedad
+            name: Cherry
+          - entity: sensor.jardin_2_motto_humedad
+            name: Pepinos
+          - entity: sensor.jardin_3_tex_humedad
+            name: Tex
+          - entity: sensor.jardin_4_escu_humedad
+            name: Calabazas
+
+      - type: history-graph
+        title: Temperatura suelo — 7 días
+        hours_to_show: 168
+        refresh_interval: 300
+        entities:
+          - entity: sensor.jardin_1_cherry_temperatura
+            name: Cherry
+          - entity: sensor.jardin_2_motto_temperatura
+            name: Pepinos
+          - entity: sensor.jardin_3_tex_temperatura
+            name: Tex
+          - entity: sensor.jardin_4_escu_temperatura
+            name: Calabazas
+
+      - type: history-graph
+        title: Conductividad — 7 días
+        hours_to_show: 168
+        refresh_interval: 300
+        entities:
+          - entity: sensor.jardin_1_cherry_conductividad
+            name: Cherry
+          - entity: sensor.jardin_2_motto_conductividad
+            name: Pepinos
+          - entity: sensor.jardin_3_tex_conductividad
+            name: Tex
+          - entity: sensor.jardin_4_escu_conductividad
+            name: Calabazas
+
+      - type: history-graph
+        title: Iluminancia — 7 días
+        hours_to_show: 168
+        refresh_interval: 300
+        entities:
+          - entity: sensor.jardin_1_cherry_iluminancia
+            name: Cherry
+          - entity: sensor.jardin_2_motto_iluminancia
+            name: Pepinos
+          - entity: sensor.jardin_3_tex_iluminancia
+            name: Tex
+          - entity: sensor.jardin_4_escu_iluminancia
+            name: Calabazas
+
+      - type: history-graph
+        title: Etapas de riego — 48 h
+        hours_to_show: 48
+        refresh_interval: 60
+        entities:
+          - entity: input_select.riego_zona1_etapa
+            name: Zona 1
+          - entity: input_select.riego_zona2_etapa
+            name: Zona 2
+          - entity: switch.valvula_riego_huerto
+            name: Válvula Huerto
+          - entity: switch.valvula_riego_rosales_pera
+            name: Válvula Jardín
+
+  # ===========================================================================
+  # VISTA 4 — Alertas y avisos
+  # ===========================================================================
+  - title: Alertas
+    path: alertas
+    icon: mdi:bell-alert
+    cards:
+      - type: entity
+        entity: input_text.riego_ultima_alerta
+        name: Última alerta
+        icon: mdi:bell-ring
+
+      - type: entity
+        entity: input_datetime.riego_ultima_alerta_hora
+        name: Hora de la última alerta
+
+      - type: markdown
+        title: Historial decisiones (ciclos)
+        content: >
+          {% set h = states('input_text.riego_historial_decisiones') %}
+          {% set h2 = states('input_text.riego_historial_decisiones_b') %}
+          {% if h in ['', 'unknown', 'unavailable'] and h2 in ['', 'unknown', 'unavailable'] %}
+          Sin decisiones registradas aún.
+          {% else %}
+          {{ (h ~ '\n\n' ~ h2) | replace('\\n', '\n\n') }}
+          {% endif %}
+
+      - type: markdown
+        title: Historial reciente
+        content: >
+          {% set h = states('input_text.riego_historial_alertas') %}
+          {% set h2 = states('input_text.riego_historial_alertas_b') %}
+  
