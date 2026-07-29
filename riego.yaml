@@ -750,5 +750,6 @@ views:
         entities:
           - input_number.riego_umbral_desfase_moderado
           - input_number.riego_umbral_desfase_grave
-          - input_number.
+          - input_number.riego_umbral_ec_encharque
+          - input_number.riego_umbral_desbalance_circuito
   
