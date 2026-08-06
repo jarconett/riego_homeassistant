@@ -5,6 +5,9 @@
 #
 # Reinicia el add-on Tailscale dos veces por semana para liberar recursos
 # y evitar bloqueos de comunicación VPN.
+#
+# Usa hassio.addon_restart con el slug del complemento (no entity_id addon_…,
+# que Home Assistant rechaza en target.entity_id).
 
 automation:
   - id: mantenimiento_reiniciar_addon_tailscale
@@ -20,11 +23,6 @@ automation:
           - sun
           - wed
     actions:
-      # Versión de la tienda oficial de complementos (entity_id addon_…)
-      - action: homeassistant.restart_addon
-        target:
-          entity_id: addon_97ca4967_tailscale
-      # Si homeassistant.restart_addon no está disponible en tu HA, usa en su lugar:
-      # - action: hassio.addon_restart
-      #   data:
-      #     addon: 97ca4967_tailscale
+      - action: hassio.addon_restart
+        data:
+          addon: 97ca4967_tailscale
