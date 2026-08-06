@@ -20,10 +20,11 @@ automation:
           - sun
           - wed
     actions:
-      - action: hassio.addon_restart
-        data:
-          addon: 97ca4967_tailscale
-      # Alternativa si prefieres la entidad del add-on (Supervisor / tienda oficial):
-      # - action: homeassistant.restart_addon
-      #   target:
-      #     entity_id: addon_97ca4967_tailscale
+      # Versión de la tienda oficial de complementos (entity_id addon_…)
+      - action: homeassistant.restart_addon
+        target:
+          entity_id: addon_97ca4967_tailscale
+      # Si homeassistant.restart_addon no está disponible en tu HA, usa en su lugar:
+      # - action: hassio.addon_restart
+      #   data:
+      #     addon: 97ca4967_tailscale
