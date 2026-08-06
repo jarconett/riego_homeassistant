@@ -1,8 +1,14 @@
 # Paquete de riego inteligente — dos zonas (2 válvulas / 2 circuitos)
 #
-# Instalación: copia a config/packages/ y añade en configuration.yaml:
+# Instalación: copia SOLO este fichero a config/packages/riego_inteligente.yaml
 #   homeassistant:
 #     packages: !include_dir_named packages
+#
+# NO dupliques group / input_* / script de este paquete en configuration.yaml,
+# scripts.yaml ni en otro .yaml de packages/. Si lo haces, HA falla con:
+#   Setup of package 'riego_inteligente' failed: integration '…' has duplicate key 'name'
+# (en scripts el conflicto aparece como duplicate key 'alias').
+# Ver INSTALL.md en el repositorio.
 #
 # Notificaciones push: notify.mobile_app_pixel_9
 #
