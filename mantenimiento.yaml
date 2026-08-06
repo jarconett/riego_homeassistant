@@ -1,0 +1,30 @@
+# Paquete de mantenimiento del sistema
+#
+# Instalación: copia a config/packages/ junto con el resto de paquetes
+# (packages: !include_dir_named packages).
+#
+# Reinicia el add-on Tailscale dos veces por semana para liberar recursos
+# y evitar bloqueos de comunicación VPN.
+
+automation:
+  - id: mantenimiento_reiniciar_addon_tailscale
+    alias: "Mantenimiento: Reiniciar Add-on Tailscale"
+    description: Reinicia Tailscale dos veces por semana para liberar recursos y evitar bloqueos
+    mode: single
+    triggers:
+      - trigger: time
+        at: "04:00:00"
+    conditions:
+      - condition: time
+        weekday:
+          - sun
+          - wed
+    actions:
+      # Versión de la tienda oficial de complementos (entity_id addon_…)
+      - action: homeassistant.restart_addon
+        target:
+          entity_id: addon_97ca4967_tailscale
+      # Si homeassistant.restart_addon no está disponible en tu HA, usa en su lugar:
+      # - action: hassio.addon_restart
+      #   data:
+      #     addon: 97ca4967_tailscale
