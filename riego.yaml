@@ -159,6 +159,45 @@ views:
           - entity: sensor.aemet_rain
             name: Lluvia prevista
 
+      - type: markdown
+        title: Refuerzo fijo Zona 1 (jardineras/arriate)
+        content: >
+          Pulsos **sin desbalance**. Hoy:
+          mañana **{{ states('input_number.riego_zona1_refuerzo_hora_manana') | int(7) }}:00**
+          → {{ '✅ hecho' if is_state('input_boolean.riego_zona1_refuerzo_manana_hoy', 'on') else '⬜ pendiente' }}
+          {% if not is_state('input_datetime.riego_zona1_refuerzo_manana_ultimo', 'unknown') and states('input_datetime.riego_zona1_refuerzo_manana_ultimo') not in ['unknown', 'unavailable', ''] %}
+          ({{ states('input_datetime.riego_zona1_refuerzo_manana_ultimo') }})
+          {% endif %}
+          · tarde **{{ states('input_number.riego_zona1_refuerzo_hora_tarde') | int(19) }}:00**
+          → {{ '✅ hecho' if is_state('input_boolean.riego_zona1_refuerzo_tarde_hoy', 'on') else '⬜ pendiente' }}
+          {% if not is_state('input_datetime.riego_zona1_refuerzo_tarde_ultimo', 'unknown') and states('input_datetime.riego_zona1_refuerzo_tarde_ultimo') not in ['unknown', 'unavailable', ''] %}
+          ({{ states('input_datetime.riego_zona1_refuerzo_tarde_ultimo') }})
+          {% endif %}
+          · duración **{{ states('input_number.riego_zona1_pulso_programado_min') | int(2) }} min**.
+          Humedades: {{ states('sensor.riego_humedades_resumen') }}.
+      - type: entities
+        title: Controles refuerzo Z1
+        show_header_toggle: false
+        entities:
+          - entity: input_number.riego_zona1_pulso_programado_min
+            name: Minutos de refuerzo
+          - entity: input_number.riego_zona1_refuerzo_hora_manana
+            name: Hora mañana
+          - entity: input_number.riego_zona1_refuerzo_hora_tarde
+            name: Hora tarde
+          - entity: input_boolean.riego_zona1_refuerzo_manana_hoy
+            name: Mañana hecho hoy
+          - entity: input_boolean.riego_zona1_refuerzo_tarde_hoy
+            name: Tarde hecho hoy
+          - entity: input_datetime.riego_zona1_refuerzo_manana_ultimo
+            name: Último refuerzo mañana
+          - entity: input_datetime.riego_zona1_refuerzo_tarde_ultimo
+            name: Último refuerzo tarde
+          - entity: script.riego_programado_zona1
+            name: Lanzar refuerzo ahora
+          - entity: sensor.riego_refuerzo_z1_estado_hoy
+            name: Resumen hoy
+
       - type: entities
         title: Últimas ejecuciones
         entities:
@@ -198,6 +237,8 @@ views:
             name: Bloqueo EC Z1
           - entity: sensor.riego_zona_2_bloqueo_ec
             name: Bloqueo EC Z2
+          - entity: sensor.riego_humedades_resumen
+            name: Humedades Mi Flora
 
       - type: history-graph
         title: Minutos hasta amanecer — 24 h
@@ -301,10 +342,12 @@ views:
         title: Refuerzo Zona 1 (jardineras/arriate)
         content: >
           Pulsos fijos **sin evaluar desbalance**. Complementan el orquestador nocturno.
-          Las horas son en punto (p. ej. slider **7** → 07:00, **19** → 19:00).
-          Actual: **{{ states('input_number.riego_zona1_pulso_programado_min') | int(2) }} min**
-          a las **{{ states('input_number.riego_zona1_refuerzo_hora_manana') | int(7) }}:00**
-          y **{{ states('input_number.riego_zona1_refuerzo_hora_tarde') | int(19) }}:00**.
+          Hoy: mañana **{{ states('input_number.riego_zona1_refuerzo_hora_manana') | int(7) }}:00**
+          {{ '✅' if is_state('input_boolean.riego_zona1_refuerzo_manana_hoy', 'on') else '⬜' }}
+          · tarde **{{ states('input_number.riego_zona1_refuerzo_hora_tarde') | int(19) }}:00**
+          {{ '✅' if is_state('input_boolean.riego_zona1_refuerzo_tarde_hoy', 'on') else '⬜' }}
+          · **{{ states('input_number.riego_zona1_pulso_programado_min') | int(2) }} min**.
+          Humedades: {{ states('sensor.riego_humedades_resumen') }}.
       - type: entities
         title: Ajuste refuerzo Z1
         show_header_toggle: false
@@ -315,10 +358,22 @@ views:
             name: Hora mañana
           - entity: input_number.riego_zona1_refuerzo_hora_tarde
             name: Hora tarde
+          - entity: input_boolean.riego_zona1_refuerzo_manana_hoy
+            name: Mañana hecho hoy
+          - entity: input_boolean.riego_zona1_refuerzo_tarde_hoy
+            name: Tarde hecho hoy
+          - entity: input_datetime.riego_zona1_refuerzo_manana_ultimo
+            name: Último refuerzo mañana
+          - entity: input_datetime.riego_zona1_refuerzo_tarde_ultimo
+            name: Último refuerzo tarde
           - entity: script.riego_programado_zona1
             name: Lanzar refuerzo ahora
           - entity: sensor.riego_efectivo_pulso_programado_z1_min
             name: Duración efectiva (min/s sim)
+          - entity: sensor.riego_refuerzo_z1_estado_hoy
+            name: Resumen hoy
+          - entity: sensor.riego_humedades_resumen
+            name: Humedades Mi Flora
 
       - type: entities
         title: Objetivos de humedad (ajustables)

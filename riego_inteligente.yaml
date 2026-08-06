@@ -1,8 +1,14 @@
 # Paquete de riego inteligente — dos zonas (2 válvulas / 2 circuitos)
 #
-# Instalación: copia a config/packages/ y añade en configuration.yaml:
+# Instalación: copia SOLO este fichero a config/packages/riego_inteligente.yaml
 #   homeassistant:
 #     packages: !include_dir_named packages
+#
+# NO dupliques group / input_* / script de este paquete en configuration.yaml,
+# scripts.yaml ni en otro .yaml de packages/. Si lo haces, HA falla con:
+#   Setup of package 'riego_inteligente' failed: integration '…' has duplicate key 'name'
+# (en scripts el conflicto aparece como duplicate key 'alias').
+# Ver INSTALL.md en el repositorio.
 #
 # Notificaciones push: notify.mobile_app_pixel_9
 #
@@ -359,6 +365,12 @@ input_boolean:
   riego_zona2_ciclo_en_curso:
     name: Ciclo Zona 2 en ejecución
     icon: "mdi:progress-clock"
+  riego_zona1_refuerzo_manana_hoy:
+    name: Refuerzo mañana Z1 hecho hoy
+    icon: "mdi:weather-sunset-up"
+  riego_zona1_refuerzo_tarde_hoy:
+    name: Refuerzo tarde Z1 hecho hoy
+    icon: "mdi:weather-sunset-down"
 input_select:
   riego_zona1_etapa:
     name: Etapa riego Zona 1
@@ -421,6 +433,16 @@ input_datetime:
     has_date: true
     has_time: true
     icon: "mdi:bell-alert"
+  riego_zona1_refuerzo_manana_ultimo:
+    name: Último refuerzo mañana Z1
+    has_date: true
+    has_time: true
+    icon: "mdi:weather-sunset-up"
+  riego_zona1_refuerzo_tarde_ultimo:
+    name: Último refuerzo tarde Z1
+    has_date: true
+    has_time: true
+    icon: "mdi:weather-sunset-down"
 input_text:
   riego_ultima_alerta:
     name: Última alerta riego
@@ -731,6 +753,36 @@ template:
             {{ (states('sensor.riego_efectivo_pulso1_min') | int(10) + states('sensor.riego_efectivo_pausa_absorcion_min') | int(15) + states('sensor.riego_efectivo_lectura_final_min') | int(10) + states('input_number.riego_minutos_margen_amanecer') | float(30)) | int }} min
           bloqueo_ec_cultivos: "{{ state_attr('sensor.riego_zona_2_bloqueo_ec', 'cultivos') }}"
           nota: Sin fallback ola de calor; en ciclos 6–8 puede forzar riego con suelo caliente
+      - name: Riego humedades resumen
+        unique_id: riego_humedades_resumen
+        default_entity_id: sensor.riego_humedades_resumen
+        icon: "mdi:water-percent"
+        state: >
+          Cherry {{ states('sensor.jardin_1_cherry_humedad') }}% · Pepinos {{ states('sensor.jardin_2_motto_humedad') }}% · Calabazas {{ states('sensor.jardin_4_escu_humedad') }}% · Tex {{ states('sensor.jardin_3_tex_humedad') }}%
+        attributes:
+          cherry: "{{ states('sensor.jardin_1_cherry_humedad') }}"
+          pepinos: "{{ states('sensor.jardin_2_motto_humedad') }}"
+          calabazas: "{{ states('sensor.jardin_4_escu_humedad') }}"
+          tex: "{{ states('sensor.jardin_3_tex_humedad') }}"
+      - name: Riego refuerzo Z1 estado hoy
+        unique_id: riego_refuerzo_z1_estado_hoy
+        default_entity_id: sensor.riego_refuerzo_z1_estado_hoy
+        icon: "mdi:calendar-clock"
+        state: >
+          {% set hm = states('input_number.riego_zona1_refuerzo_hora_manana') | int(7) %}
+          {% set ht = states('input_number.riego_zona1_refuerzo_hora_tarde') | int(19) %}
+          {% set dm = states('input_number.riego_zona1_pulso_programado_min') | int(2) %}
+          {% set m = 'sí' if is_state('input_boolean.riego_zona1_refuerzo_manana_hoy', 'on') else 'no' %}
+          {% set t = 'sí' if is_state('input_boolean.riego_zona1_refuerzo_tarde_hoy', 'on') else 'no' %}
+          Mañana {{ hm }}:00 {{ m }} · Tarde {{ ht }}:00 {{ t }} · {{ dm }} min
+        attributes:
+          hora_manana: "{{ states('input_number.riego_zona1_refuerzo_hora_manana') | int(7) }}:00"
+          hora_tarde: "{{ states('input_number.riego_zona1_refuerzo_hora_tarde') | int(19) }}:00"
+          minutos: "{{ states('input_number.riego_zona1_pulso_programado_min') | int(2) }}"
+          manana_hecho: "{{ is_state('input_boolean.riego_zona1_refuerzo_manana_hoy', 'on') }}"
+          tarde_hecho: "{{ is_state('input_boolean.riego_zona1_refuerzo_tarde_hoy', 'on') }}"
+          ultimo_manana: "{{ states('input_datetime.riego_zona1_refuerzo_manana_ultimo') }}"
+          ultimo_tarde: "{{ states('input_datetime.riego_zona1_refuerzo_tarde_ultimo') }}"
 script:
   notificar_riego:
     alias: Registrar alerta y notificar Pixel 9
@@ -1487,7 +1539,8 @@ script:
                         data:
                           titulo: 📡 Zona 1 — Sensor no disponible
                           mensaje: "Fin de ciclos nocturnos sin lecturas Mi Flora fiables. Fallidos: {{\
-                            \ state_attr('sensor.riego_zona_1_sensores_ok', 'fallidos') }}. Revisa Bluetooth\
+                            \ state_attr('sensor.riego_zona_1_sensores_ok', 'fallidos') }}. Humedades:\
+                            \ {{ states('sensor.riego_humedades_resumen') }}. Revisa Bluetooth\
                             \ antes de confiar en el riego automático."
                       - action: input_boolean.turn_on
                         target:
@@ -1839,7 +1892,8 @@ script:
                         data:
                           titulo: 📡 Zona 2 — Sensor no disponible
                           mensaje: "Fin de ciclos nocturnos sin lecturas Mi Flora fiables. Fallidos: {{\
-                            \ state_attr('sensor.riego_zona_2_sensores_ok', 'fallidos') }}. Revisa Bluetooth\
+                            \ state_attr('sensor.riego_zona_2_sensores_ok', 'fallidos') }}. Humedades:\
+                            \ {{ states('sensor.riego_humedades_resumen') }}. Revisa Bluetooth\
                             \ y rosales a ojo."
                       - action: input_boolean.turn_on
                         target:
@@ -2459,7 +2513,7 @@ script:
       - action: script.notificar_riego
         data:
           titulo: "💧 Zona 1 — Riego refuerzo jardineras/arriate"
-          mensaje: "Arranca pulso fijo de {{ mins | int }} min a las {{ now().strftime('%H:%M') }}{% if sim %} (simulación {{ d_seg | int }} s){% endif %}. Sin evaluar desbalance. Cherry {{ states('sensor.jardin_1_cherry_humedad') }}%, Pepinos {{ states('sensor.jardin_2_motto_humedad') }}%, Calabazas {{ states('sensor.jardin_4_escu_humedad') }}%."
+          mensaje: "Arranca pulso fijo de {{ mins | int }} min a las {{ now().strftime('%H:%M') }}{% if sim %} (simulación {{ d_seg | int }} s){% endif %}. Sin evaluar desbalance. Humedades: {{ states('sensor.riego_humedades_resumen') }}."
       - delay:
           seconds: "{{ d_seg | int }}"
       - choose:
@@ -2479,11 +2533,35 @@ script:
           entity_id: input_datetime.riego_zona1_ultimo
         data:
           datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+      - variables:
+          tramo: "{% set h = now().hour %}{% set hm = states('input_number.riego_zona1_refuerzo_hora_manana') | int(7) %}{% set ht = states('input_number.riego_zona1_refuerzo_hora_tarde') | int(19) %}{{ 'manana' if h == hm or (h != ht and h < 12) else 'tarde' }}"
+      - choose:
+          - conditions:
+              - condition: template
+                value_template: "{{ tramo == 'manana' }}"
+            sequence:
+              - action: input_boolean.turn_on
+                target:
+                  entity_id: input_boolean.riego_zona1_refuerzo_manana_hoy
+              - action: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.riego_zona1_refuerzo_manana_ultimo
+                data:
+                  datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+        default:
+          - action: input_boolean.turn_on
+            target:
+              entity_id: input_boolean.riego_zona1_refuerzo_tarde_hoy
+          - action: input_datetime.set_datetime
+            target:
+              entity_id: input_datetime.riego_zona1_refuerzo_tarde_ultimo
+            data:
+              datetime: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
       - action: script.riego_registrar_decision
         data:
           zona: '1'
           decision: riego_refuerzo
-          detalle: "{{ mins | int }} min a las {{ states('input_number.riego_zona1_refuerzo_hora_manana') | int(7) }}:00/{{ states('input_number.riego_zona1_refuerzo_hora_tarde') | int(19) }}:00 (sin desbalance)"
+          detalle: "{{ mins | int }} min tramo {{ tramo }} (sin desbalance)"
       - action: script.riego_etapa_zona1
         data:
           etapa: Completado
@@ -2660,6 +2738,19 @@ automation:
       - action: script.riego_etapa_zona2
         data:
           etapa: En espera
+  - id: riego_reset_refuerzo_diario
+    alias: Riego — Reset flags refuerzo Z1
+    description: A medianoche limpia los indicadores de refuerzo mañana/tarde para el nuevo día
+    mode: single
+    triggers:
+      - trigger: time
+        at: "00:00:00"
+    actions:
+      - action: input_boolean.turn_off
+        target:
+          entity_id:
+            - input_boolean.riego_zona1_refuerzo_manana_hoy
+            - input_boolean.riego_zona1_refuerzo_tarde_hoy
   - id: riego_reset_post_noche
     alias: Riego — Reset contadores post-noche
     description: Limpia contadores si la noche terminó de día (amanecer perdido)
@@ -2723,9 +2814,7 @@ automation:
       - action: script.notificar_riego
         data:
           titulo: 📡 Mi Flora — Revisar Bluetooth
-          mensaje: "Sensores en fallo ≥2 h: Z1={{ states('sensor.riego_zona_1_sensores_ok') }} ({{ state_attr('sensor.riego_zona_1_sensores_ok',\
-            \ 'fallidos') }}), Z2={{ states('sensor.riego_zona_2_sensores_ok') }} ({{ state_attr('sensor.riego_zona_2_sensores_ok',\
-            \ 'fallidos') }}). Acerca el proxy Bluetooth antes del riego nocturno."
+          mensaje: "Sensores en fallo ≥2 h: Z1={{ states('sensor.riego_zona_1_sensores_ok') }} ({{ state_attr('sensor.riego_zona_1_sensores_ok', 'fallidos') }}), Z2={{ states('sensor.riego_zona_2_sensores_ok') }} ({{ state_attr('sensor.riego_zona_2_sensores_ok', 'fallidos') }}). Humedades actuales: {{ states('sensor.riego_humedades_resumen') }}. Acerca el proxy Bluetooth antes del riego nocturno."
       - action: input_boolean.turn_on
         target:
           entity_id: input_boolean.riego_bluetooth_aviso_enviado
